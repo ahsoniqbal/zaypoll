@@ -4,15 +4,13 @@ import { CommentDto, PollListingDto } from "@/dto/poll.dtos";
 import PollHeader from "./PollHeader";
 import PollOptions from "./PollOptions";
 import PollReactions from "./PollReactions";
-import Link from "next/link";
 import { useVote } from "@/hooks/useVote";
-import { Button } from "@/components/ui/button";
-import { useEffect, useRef, useState } from "react";
-import { Input } from "../ui/input";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PollCommentButton from "./PollCommentButton";
 import ReasonSection from "./ReasonSection";
 import { AppButton } from "../AppButton";
+import { useAuthModal } from "@/hooks/useAuthModal";
 
 type Props = {
     poll: PollListingDto;
@@ -23,37 +21,32 @@ type Props = {
 
 export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, initialReasons }: Props) {
     const { handleVote, isPending } = useVote(poll.pollId);
+    const { open } = useAuthModal();
 
     const [selectedOption, setSelectedOption] = useState<number | null>(null); //option id before showing results
 
     const [hasVoted, setHasVoted] = useState(poll.hasVoted);
     const [userVoteOptionId, setUserVoteOptionId] = useState<number | null>(poll.userVoteOptionId); //option id after showing results
 
-    const [reason, setReason] = useState("");
-
-    const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
-
-    useEffect(() => {
-        if (selectedOption) {
-            requestAnimationFrame(() => {
-                inputRef.current?.focus();
-            });
-        }
-    }, [selectedOption]);
+    const [hasReason, setHasReason] = useState(poll.hasReason);
 
     const onClickVoteButton = async () => {
         if (!selectedOption || isPending || hasVoted) {
             return;
         }
 
-        const success = await handleVote(selectedOption, reason, true);
+        if (!isUserLoggedIn) {
+            open();
+            return;
+        }
+
+        const success = await handleVote(selectedOption, true);
 
         if (success) {
             setHasVoted(true);
             setUserVoteOptionId(selectedOption);
             setSelectedOption(null);
-            setReason("");
         }
     }
 
@@ -89,21 +82,6 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
                 selectedOption={selectedOption}
                 onSelect={setSelectedOption}
             />
-
-            <div className={`overflow-hidden transition-all duration-300 ease-out
-                    ${selectedOption && !hasVoted ? "max-h-[100px] mt-3 opacity-100" : "max-h-0 opacity-0"}
-                    `}>
-                <Input
-                    ref={inputRef}
-                    type="text"
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder="Why did you choose this?"
-                    maxLength={100}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-full rounded-xl border border-gray-300 bg-gray-50
-                            focus:bg-white focus:border-black focus-visible:ring-2 focus-visible:ring-black/10"/>
-            </div>
 
             {/* Likes + comments + vote button */}
             <div className="flex items-center justify-between mt-4 pt-3">
@@ -152,7 +130,11 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
                         isUserLoggedIn={isUserLoggedIn}
                         hasVoted={hasVoted}
                         userVoteOptionId={userVoteOptionId}
-                        hasReason={poll.hasReason}
+                        hasReason={hasReason}
+                        onReasonAdded={() => {
+                            setHasReason(true);
+                            router.refresh();
+                        }}
                         initialReasons={initialReasons}
                     />
                 </div>

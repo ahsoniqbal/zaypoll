@@ -4,14 +4,13 @@ import { PollListingDto } from "@/dto/poll.dtos";
 import PollHeader from "./PollHeader";
 import PollOptions from "./PollOptions";
 import PollReactions from "./PollReactions";
-import Link from "next/link";
 import { useVote } from "@/hooks/useVote";
-import { Button } from "@/components/ui/button";
-import { useEffect, useRef, useState } from "react";
-import { Input } from "../ui/input";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PollCommentButton from "./PollCommentButton";
 import { AppButton } from "../AppButton";
+import ReasonComposer from "./ReasonComposer";
+import { useAuthModal } from "@/hooks/useAuthModal";
 
 
 type Props = {
@@ -21,29 +20,24 @@ type Props = {
 
 export default function PollCard({ poll, isUserLoggedIn }: Props) {
     const { handleVote, isPending } = useVote(poll.pollId);
+    const { open } = useAuthModal();
 
     const [selectedOption, setSelectedOption] = useState<number | null>(null); //option id before showing results
-    const [reason, setReason] = useState("");
-
-    const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
     const [options, setOptions] = useState(poll.options);
     const [totalVotes, setTotalVotes] = useState(poll.totalVotes);
     const [hasVoted, setHasVoted] = useState(poll.hasVoted);
     const [userVoteOptionId, setUserVoteOptionId] = useState(poll.userVoteOptionId);
-
-
-    useEffect(() => {
-        if (selectedOption) {
-            requestAnimationFrame(() => {
-                inputRef.current?.focus();
-            });
-        }
-    }, [selectedOption]);
+    const [hasReason, setHasReason] = useState(poll.hasReason);
 
     const onClickVoteButton = async () => {
         if (!selectedOption || isPending || hasVoted) return;
+
+        if (!isUserLoggedIn) {
+            open();
+            return;
+        }
 
 
         // Save previous state (for rollback)
@@ -66,12 +60,8 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
         setTotalVotes(prev => prev + 1);
 
         setSelectedOption(null);
-        setReason("")
-
-
-
         try {
-            const success = await handleVote(selectedOption, reason);
+            const success = await handleVote(selectedOption);
 
             // ROLLBACK if failed
             if (!success) {
@@ -123,19 +113,16 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                 onSelect={setSelectedOption}
             />
 
-            <div className={`overflow-hidden transition-all duration-300 ease-out
-                    ${selectedOption && !hasVoted ? "max-h-[100px] mt-3 opacity-100" : "max-h-0 opacity-0"}
-                    `}>
-                <Input
-                    ref={inputRef}
-                    type="text"
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder="Why did you choose this?"
-                    maxLength={100}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-full rounded-xl border border-gray-300 bg-gray-50
-                            focus:bg-white focus:border-black focus-visible:ring-2 focus-visible:ring-black/10"/>
+            <div className="mt-3" onClick={(event) => event.stopPropagation()}>
+                <ReasonComposer
+                    pollId={poll.pollId}
+                    optionId={userVoteOptionId}
+                    optionText={options.find((option) => option.id === userVoteOptionId)?.optionText}
+                    isUserLoggedIn={isUserLoggedIn}
+                    hasVoted={hasVoted}
+                    hasReason={hasReason}
+                    onReasonAdded={() => setHasReason(true)}
+                />
             </div>
 
             {/* Likes + comments + vote button */}

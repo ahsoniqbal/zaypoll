@@ -2,20 +2,29 @@
 
 import { useState, useTransition } from "react";
 import { toggleFollowAction } from "@/actions/user.actions";
+import { useAuthModal } from "@/hooks/useAuthModal";
 
 type Props = {
     userId: number;
     initialIsFollowing: boolean;
+    isLoggedIn: boolean;
 };
 
 export default function FollowButton({
     userId,
     initialIsFollowing,
+    isLoggedIn,
 }: Props) {
     const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
     const [isPending, startTransition] = useTransition();
+    const { open } = useAuthModal();
 
     const handleToggle = () => {
+        if (!isLoggedIn) {
+            open();
+            return;
+        }
+
         startTransition(async () => {
             const res = await toggleFollowAction(userId);
 

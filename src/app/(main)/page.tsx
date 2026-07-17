@@ -5,6 +5,7 @@ import { PagedResponse } from "@/types/common.types";
 import ToastHandler from "@/components/ToastHandler";
 import { auth } from "@/auth";
 import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from "@/types/constants";
+import { redirect } from "next/navigation";
 
 export default async function Home({
   searchParams,
@@ -25,6 +26,10 @@ export default async function Home({
 
   const session = await auth();
   const userId = session?.user?.id ?? null;
+
+  if (feed === "following" && !userId) {
+    redirect("/?auth=login");
+  }
 
   const result: PagedResponse<PollListingDto> =
     await getPolls(userId, pageNumber, DEFAULT_PAGE_LIMIT, feed, null, "latest");

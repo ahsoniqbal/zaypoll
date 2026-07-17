@@ -15,8 +15,11 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Polling App",
-  description: "Polling platform",
+  title: {
+    default: "Zaypoll — Discuss every vote",
+    template: "%s | Zaypoll",
+  },
+  description: "Explore public polls, compare opinions, and discuss the reasons behind every vote.",
 };
 
 export default function RootLayout({

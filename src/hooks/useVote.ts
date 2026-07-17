@@ -7,11 +7,11 @@ import { toast } from "react-hot-toast/headless";
 export function useVote(pollId: number) {
   const [isPending, startTransition] = useTransition();
 
-  const handleVote = (optionId: number, reason?: string, isDetailsPage: boolean = false): Promise<boolean> => {
+  const handleVote = (optionId: number, isDetailsPage: boolean = false): Promise<boolean> => {
     return new Promise(resolve => {
       startTransition(async () => {
         try {
-          const res = await castVoteAction(pollId, optionId, reason, isDetailsPage);
+          const res = await castVoteAction(pollId, optionId, isDetailsPage);
 
           if (!res.success) {
             toast.error(res.message);

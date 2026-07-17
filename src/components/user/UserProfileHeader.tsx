@@ -15,7 +15,7 @@ export default function UserProfileHeader({
   loggedInUserId,
   isOwnProfile
 }: Props) {
-  const showFollowButton = loggedInUserId && !isOwnProfile;
+  const showFollowButton = !isOwnProfile;
 
   return (
 
@@ -72,6 +72,7 @@ export default function UserProfileHeader({
           <FollowButton
             userId={user.id}
             initialIsFollowing={user.isFollowing}
+            isLoggedIn={!!loggedInUserId}
           />
         </div>
       )}

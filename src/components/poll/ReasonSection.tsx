@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { CommentDto, PollOptionDto } from "@/dto/poll.dtos";
-import { getCommentsByOptionIdAction, addReasonAction, getPollReasonsAction } from "@/actions/poll.actions";
+import { getPollReasonsAction } from "@/actions/poll.actions";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import CommentReactions from "./CommentReactions";
 import { format } from "date-fns";
-import { Link } from "lucide-react";
-import { AppButton } from "../AppButton";
+import ReasonComposer from "./ReasonComposer";
 
 type Props = {
   pollId: number;
@@ -16,6 +15,7 @@ type Props = {
   hasVoted: boolean;
   userVoteOptionId: number | null;
   hasReason: boolean;
+  onReasonAdded: () => void;
   initialReasons: CommentDto[];
 };
 
@@ -26,6 +26,7 @@ export default function ReasonSection({
   hasVoted,
   userVoteOptionId,
   hasReason,
+  onReasonAdded,
   initialReasons,
 }: Props) {
 
@@ -39,15 +40,38 @@ export default function ReasonSection({
   });
 
   const [loading, setLoading] = useState(false);
-  const [newComment, setNewComment] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const cacheKey = `${selectedOptionId}_${sortBy}`;
   const comments = commentsMap[cacheKey] || [];
 
-  const selectedOption = selectedOptionId === ALL
-    ? null
-    : options.find(o => o.id === selectedOptionId);
+  const refreshReasonCaches = async (optionId: number) => {
+    setLoading(true);
+    try {
+      const [allReasons, optionReasons] = await Promise.all([
+        getPollReasonsAction(pollId, null, sortBy),
+        getPollReasonsAction(pollId, optionId, sortBy),
+      ]);
+
+      setCommentsMap((previous) => {
+        const next = { ...previous };
+
+        // A new reason affects only All and the option it belongs to. Keep every
+        // other option's cached list, and refresh the alternate sort on demand.
+        delete next.all_top;
+        delete next.all_latest;
+        delete next[`${optionId}_top`];
+        delete next[`${optionId}_latest`];
+
+        next[`all_${sortBy}`] = allReasons;
+        next[`${optionId}_${sortBy}`] = optionReasons;
+        return next;
+      });
+
+      onReasonAdded();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // =========================
   // FETCH COMMENTS (lazy + cached)
@@ -75,53 +99,6 @@ export default function ReasonSection({
     fetchComments();
   }, [selectedOptionId, sortBy]);
 
-  const handleAddReason = async () => {
-    if (!newComment.trim()) return;
-
-    if (!hasVoted) return;
-
-    const text = newComment.trim();
-
-    setIsSubmitting(true);
-
-    const tempKey = `${userVoteOptionId}_${sortBy}`;
-
-    try {
-      const res = await addReasonAction(
-        pollId,
-        Number(userVoteOptionId),
-        text
-      );
-
-      if (!res.success || !res.data) throw new Error(res.message);
-
-      setNewComment("");
-
-      // refetch correct option
-      const optionData = await getPollReasonsAction(pollId,
-        Number(userVoteOptionId),
-        sortBy
-      );
-
-      const allData = await getPollReasonsAction(
-        pollId,
-        null as any,
-        sortBy
-      );
-
-      setCommentsMap(prev => ({
-        ...prev,
-        [tempKey]: optionData || [],
-        [`all_${sortBy}`]: allData || [],
-      }));
-
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   // =========================
   // UI
   // =========================
@@ -142,28 +119,15 @@ export default function ReasonSection({
         </select>
       </div>
 
-      {/* Add reason */}
-      {isUserLoggedIn && hasVoted && (
-        <div className="flex items-center gap-2">
-          <input
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder={`Why did you choose "${selectedOption?.optionText}"?`}
-            className="flex-1 px-4 py-2 text-sm border rounded-full bg-gray-50"
-            maxLength={180}
-          />
-
-          <AppButton
-            // size="sm"
-            onClick={handleAddReason}
-            disabled={!newComment.trim() || isSubmitting || hasReason || !hasVoted}
-            isLoading={isSubmitting}
-            loadingText="Adding..."
-          >
-            Add
-          </AppButton>
-        </div>
-      )}
+      <ReasonComposer
+        pollId={pollId}
+        optionId={userVoteOptionId}
+        optionText={options.find((option) => option.id === userVoteOptionId)?.optionText}
+        isUserLoggedIn={isUserLoggedIn}
+        hasVoted={hasVoted}
+        hasReason={hasReason}
+        onReasonAdded={refreshReasonCaches}
+      />
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-2">

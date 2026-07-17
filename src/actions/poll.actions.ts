@@ -131,7 +131,7 @@ export async function addReasonAction(pollId: number, optionId: number, reason: 
 }
 
 
-export async function castVoteAction(pollId: number, optionId: number, reason?: string, isDetailsPage: boolean = false)
+export async function castVoteAction(pollId: number, optionId: number, isDetailsPage: boolean = false)
     : Promise<ActionResponse<{ optionId: number }>> {
     try {
         const session = await auth();
@@ -145,7 +145,12 @@ export async function castVoteAction(pollId: number, optionId: number, reason?: 
             throw new AppError("Please select option");
         }
 
-        await castVote(userId, pollId, optionId, reason);
+        await castVote(userId, pollId, optionId);
+
+        // A vote changes the viewer-specific state on feeds, topic pages, profiles,
+        // and the poll detail page. Invalidate the root layout so returning to any
+        // previously visited poll surface fetches the current vote state.
+        revalidatePath("/", "layout");
 
         if (isDetailsPage) {
             revalidatePath("/polls/" + pollId);

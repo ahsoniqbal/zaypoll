@@ -1349,7 +1349,7 @@ export async function addReason(userId: number, pollId: number, optionId: number
     }
 }
 
-export async function castVote(userId: number, pollId: number, optionId: number, reason?: string) {
+export async function castVote(userId: number, pollId: number, optionId: number) {
     //await delay();
     const conn = await pool.getConnection();
 
@@ -1369,21 +1369,6 @@ export async function castVote(userId: number, pollId: number, optionId: number,
         if (!optionRows.length) {
             throw new AppError("Invalid option selected");
         }
-
-        //Insert reason (ONLY if provided)
-        const trimmed = reason?.trim();
-
-        if (trimmed) {
-            try {
-                await conn.query(`INSERT INTO option_comments (option_id, user_id, comment) VALUES (?, ?, ?)`,
-                    [optionId, userId, trimmed]);
-            } catch (err: any) {
-                if (err.code !== "ER_DUP_ENTRY") {
-                    throw err;
-                }
-            }
-        }
-
 
         await conn.query(
             `UPDATE poll_options SET vote_count = vote_count + 1 WHERE id = ?`,

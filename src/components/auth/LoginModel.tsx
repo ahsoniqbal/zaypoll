@@ -11,8 +11,9 @@ export default function LoginModal({ isOpen, onClose }: Props) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 relative">
+    
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 relative" onClick={(e) => e.stopPropagation()}>
 
         {/* Close */}
         <button
@@ -67,4 +68,3 @@ export default function LoginModal({ isOpen, onClose }: Props) {
     </div>
   );
 }
-``

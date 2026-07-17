@@ -29,12 +29,12 @@ export default function PollList(props: Props) {
     <div className="space-y-4">
       {/* <CreatePollButton isLoggedIn={isUserLoggedIn} /> */}
 
-      <div>
+      {/* <div>
         <FeedToggle currentFeed={feed} />
-      </div>
+      </div> */}
 
 
-      <div className="bg-white rounded-2xl border p-4 shadow-sm">
+      <div className="bg-white border rounded-xl p-4 transition hover:shadow-md cursor-pointer">
         <div className="flex items-center gap-3">
           <img src="https://github.com/shadcn.png" alt="User" className="w-10 h-10 rounded-full object-cover"/>
           <Link

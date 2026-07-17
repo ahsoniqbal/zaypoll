@@ -13,18 +13,6 @@ export default async function MainLayout({
   const { isLoggedIn } = await getAuthState();
   const user = await getCurrentUser();
   const unreadCount = await fetchUnreadCount();
-  // return (
-  //   <>
-  //     <Navbar isLoggedIn={isLoggedIn} user={user} unreadCount={unreadCount} />
-
-  //     <div className="flex flex-col min-h-screen">
-  //       {/* <Sidebar isLoggedIn={isLoggedIn} username={user?.userName ?? null} /> */}
-
-  //       <main className="grow">{children}</main>
-  //     </div>
-  //   </>
-  // );
-
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/30">

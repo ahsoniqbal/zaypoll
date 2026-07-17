@@ -15,7 +15,7 @@ export default function RightSidebar() {
                         <UserPlus className="w-4 h-4" /> Suggestions</h3>
                 </CardHeader>
                 <CardContent className="space-y-3 px-4 py-3">
-                    {[
+                    {[ 
                         { name: "Tech Daily", desc: "Technology & Gadgets" },
                         { name: "Design Hub", desc: "UI/UX Inspiration" },
                         { name: "Travel Bugs", desc: "Explore the world" }

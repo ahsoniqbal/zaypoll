@@ -8,4 +8,3 @@ export default function AuthModalProvider() {
 
   return <LoginModal isOpen={isOpen} onClose={close} />;
 }
-``

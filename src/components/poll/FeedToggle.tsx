@@ -22,23 +22,22 @@ export default function FeedToggle({
 
   return (
     <div className="flex justify-end mb-2">
-      <Tabs
-        value={currentFeed}
+      <Tabs value={currentFeed}
         onValueChange={(value) =>
           changeFeed(value as "for_you" | "following")
         }
       >
-        <TabsList 
-        className="bg-zinc-200 p-1 rounded-full"
+        <TabsList
+          className="bg-zinc-200 p-1 rounded-full"
         >
-          <TabsTrigger value="for_you" 
-          className="rounded-full px-4 py-2 cursor-pointer active:scale-[0.99]"
+          <TabsTrigger value="for_you"
+            className="rounded-full px-4 py-2 cursor-pointer active:scale-[0.99]"
           >
             For You
           </TabsTrigger>
 
-          <TabsTrigger value="following" 
-          className="rounded-full px-4 py-2 cursor-pointer active:scale-[0.99]"
+          <TabsTrigger value="following"
+            className="rounded-full px-4 py-2 cursor-pointer active:scale-[0.99]"
           >
             Following
           </TabsTrigger>

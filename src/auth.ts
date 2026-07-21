@@ -1,11 +1,12 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import ResendProvider from "next-auth/providers/resend";
 import { authConfig } from "./auth.config";
-import { getUserByEmail, registerUser } from "./services/user.services";
-import { User } from "./types/user.types";
+import { MySqlAuthAdapter } from "./lib/server/mysql-auth.adapter";
 
 export const { handlers: { GET, POST }, auth, signIn, signOut, } = NextAuth({
     ...authConfig,
+    adapter: MySqlAuthAdapter(),
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
@@ -17,30 +18,20 @@ export const { handlers: { GET, POST }, auth, signIn, signOut, } = NextAuth({
                     response_type: "code",
                 },
             },
+            allowDangerousEmailAccountLinking: true,
+        }),
+        ResendProvider({
+            apiKey: process.env.AUTH_RESEND_KEY,
+            from: process.env.AUTH_RESEND_FROM ?? "Zaypoll <onboarding@resend.dev>",
+            maxAge: 15 * 60,
         }),
     ],
     callbacks: {
-        async jwt({ token, profile }) {
+        async jwt({ token, user }) {
             try {
-                if (profile?.email) {
-
-                    const userFound = await getUserByEmail(profile.email);
-
-                    let appUser: User;
-
-                    if (!userFound) {
-                        appUser = await registerUser({
-                            name: profile.name ?? "",
-                            email: profile.email,
-                            image: profile.picture,
-                            // userName: profile.name ?? profile.email,
-                        });
-                    } else {
-                        appUser = userFound;
-                    }
-
-                    token.userId = appUser.id;
-                    token.userName = appUser.userName; // ADD THIS
+                if (user?.id) {
+                    token.userId = Number(user.id);
+                    token.userName = (user as typeof user & { userName?: string }).userName ?? "";
                 }
 
                 return token;
@@ -54,8 +45,9 @@ export const { handlers: { GET, POST }, auth, signIn, signOut, } = NextAuth({
             try {
 
                 if (session.user) {
-                    session.user.id = token.userId as number;
-                    session.user.userName = token.userName as string; //ADD THIS
+                    const appUser = session.user as unknown as { id: number; userName: string };
+                    appUser.id = Number(token.userId);
+                    appUser.userName = String(token.userName ?? "");
                 }
 
                 return session;

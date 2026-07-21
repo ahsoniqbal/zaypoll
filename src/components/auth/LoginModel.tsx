@@ -44,14 +44,6 @@ export default function LoginModal({ isOpen, onClose }: Props) {
         {/* ✅ Magic Link Form */}
         <form action={sendMagicLink} className="space-y-4">
           <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            required
-            className="w-full px-3 py-2 border rounded-lg"
-          />
-
-          <input
             type="email"
             name="email"
             placeholder="Email"

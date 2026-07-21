@@ -1,7 +1,14 @@
 'use server'
 
 import { signIn, signOut } from "@/auth";
+import { consumeAuthRateLimit } from "@/lib/server/auth-rate-limit";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+
+const MAGIC_LINK_WINDOW_SECONDS = 15 * 60;
+const MAGIC_LINK_EMAIL_LIMIT = 3;
+const MAGIC_LINK_IP_LIMIT = 10;
 
 export async function googleLogin() {
   await signIn("google", { redirectTo: "/" });
@@ -13,24 +20,35 @@ export async function doLogout() {
 
 
 export async function sendMagicLink(formData: FormData) {
-  const name = formData.get("name") as string;
-  const email = formData.get("email") as string;
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
 
-  if (!name || !email) {
-    return { success: false, message: "Missing fields" };
+  if (!email) {
+    return;
   }
 
-  // TODO:
-  // 1. Generate token
-  // 2. Save in DB
-  // 3. Send email with link
+  const requestHeaders = await headers();
+  const forwardedFor = requestHeaders.get("x-forwarded-for");
+  const clientIp = forwardedFor?.split(",")[0]?.trim()
+    || requestHeaders.get("x-real-ip")
+    || "unknown";
 
-  console.log("Magic link requested:", { name, email });
+  const emailAllowed = await consumeAuthRateLimit({
+    key: `magic-link:email:${email}`,
+    limit: MAGIC_LINK_EMAIL_LIMIT,
+    windowSeconds: MAGIC_LINK_WINDOW_SECONDS,
+  });
+  const ipAllowed = await consumeAuthRateLimit({
+    key: `magic-link:ip:${clientIp}`,
+    limit: MAGIC_LINK_IP_LIMIT,
+    windowSeconds: MAGIC_LINK_WINDOW_SECONDS,
+  });
 
-  return {
-    success: true,
-    message: "Magic link sent",
-  };
+  if (!emailAllowed || !ipAllowed) {
+    // Use the same confirmation screen so callers cannot enumerate accounts.
+    redirect("/api/auth/verify-request?provider=resend&type=email");
+  }
+
+  await signIn("resend", { email, redirectTo: "/" });
 }
 
 

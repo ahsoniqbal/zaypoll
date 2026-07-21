@@ -5,6 +5,8 @@ import { addReasonAction } from "@/actions/poll.actions";
 import { AppButton } from "../AppButton";
 import { toast } from "react-hot-toast/headless";
 import { useAuthModal } from "@/hooks/useAuthModal";
+import { Button } from "../ui/button";
+import { Textarea } from "../ui/textarea";
 
 type Props = {
   pollId: number;
@@ -24,13 +26,14 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
 
   if (!isUserLoggedIn) {
     return (
-      <button
+      <Button
         type="button"
         onClick={open}
-        className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-900"
+        variant="outline"
+        className="w-full justify-start rounded-2xl text-left text-muted-foreground font-medium hover:cursor-pointer"
       >
         Add a reason (optional)
-      </button>
+      </Button>
     );
   }
 
@@ -66,19 +69,19 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
 
   if (!isOpen) {
     return (
-      <button
+      <Button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-900"
-      >
-        Add a reason (optional)
-      </button>
+        variant="outline"
+        className="w-full justify-start text-left rounded-2xl px-4 py-2 text-muted-foreground font-medium cursor-pointer h-auto">
+        Add a reason
+      </Button>
     );
   }
 
   return (
-    <div>
-      <textarea
+    <div className="group relative rounded-md border border-input bg-background focus-within:ring-1 focus-within:ring-ring focus-within:border-primary overflow-hidden">
+      <Textarea
         id={`reason-${pollId}`}
         aria-label={optionText ? `Why did you choose ${optionText}?` : "Why did you choose this option?"}
         value={reason}
@@ -86,11 +89,30 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
         maxLength={150}
         autoFocus
         placeholder={optionText ? `Why did you choose “${optionText}”?` : "Why did you choose this option?"}
-        className="min-h-24 w-full resize-y rounded-md border-2 border-gray-400 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-800 focus:ring-1 focus:ring-gray-800"
+        className="min-h-[100px] w-full resize-y border-0 bg-transparent px-3 pt-3 pb-14 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
       />
-      <div className="mt-2 flex items-center justify-end gap-2">
-        <AppButton variant="ghost" size="sm" onClick={cancel} disabled={isSubmitting}>Cancel</AppButton>
-        <AppButton size="sm" onClick={submit} disabled={!reason.trim() || isSubmitting} isLoading={isSubmitting} loadingText="Submitting...">Submit reason</AppButton>
+      
+      {/* Absolute overlay at the bottom of the container */}
+      <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-transparent pointer-events-auto">
+        <Button 
+          type="button"
+          variant="ghost" 
+          size="sm" 
+          onClick={cancel} 
+          disabled={isSubmitting}
+          className="h-8 px-3 text-xs"
+        >
+          Cancel
+        </Button>
+        <Button 
+          type="button"
+          size="sm" 
+          onClick={submit} 
+          disabled={!reason.trim() || isSubmitting}
+          className="h-8 px-3 text-xs"
+        >
+          {isSubmitting ? "Submitting..." : "Submit reason"}
+        </Button>
       </div>
     </div>
   );

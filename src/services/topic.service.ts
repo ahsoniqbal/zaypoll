@@ -1,52 +1,95 @@
 import { TopicDto } from "@/dto/category.dtos";
 import pool from "@/lib/db";
+import { RowDataPacket } from "mysql2";
 
-export async function getTopics(): Promise<TopicDto[]> {
-    const [rows] = await pool.query("SELECT id, name, slug, icon_url FROM topics");
+type TopicRow = RowDataPacket & {
+  id: number;
+  name: string;
+  slug: string;
+  icon_url: string | null;
+  parent_id: number | null;
+  parent_name?: string | null;
+  parent_slug?: string | null;
+  child_count?: number;
+};
 
-    return (rows as any[]).map(row => ({
-        id: row.id,
-        name: row.name,
-        slug: row.slug,
-        iconUrl: row.icon_url,
-    }));
+const toTopic = (row: TopicRow): TopicDto => ({
+  id: row.id,
+  name: row.name,
+  slug: row.slug,
+  iconUrl: row.icon_url,
+  parentId: row.parent_id,
+  parentName: row.parent_name ?? null,
+  parentSlug: row.parent_slug ?? null,
+  childCount: Number(row.child_count ?? 0),
+});
+
+export async function getParentTopics(): Promise<TopicDto[]> {
+  const [rows] = await pool.query<TopicRow[]>(`
+    SELECT t.id, t.name, t.slug, t.icon_url, t.parent_id, COUNT(child.id) AS child_count
+    FROM topics t
+    LEFT JOIN topics child ON child.parent_id = t.id AND child.is_active = 1
+    WHERE t.parent_id IS NULL AND t.is_active = 1
+    GROUP BY t.id, t.name, t.slug, t.icon_url, t.parent_id, t.is_trending
+    ORDER BY t.is_trending DESC, t.name ASC
+  `);
+
+  return rows.map(toTopic);
+}
+
+export async function getSearchableTopics(): Promise<TopicDto[]> {
+  const [rows] = await pool.query<TopicRow[]>(`
+    SELECT t.id, t.name, t.slug, t.icon_url, t.parent_id,
+           parent.name AS parent_name, parent.slug AS parent_slug
+    FROM topics t
+    LEFT JOIN topics parent ON parent.id = t.parent_id
+    WHERE t.is_active = 1
+    ORDER BY t.name ASC
+  `);
+
+  return rows.map(toTopic);
 }
 
 export async function getTopicBySlug(slug: string): Promise<TopicDto | null> {
-    const [rows]: any = await pool.query(
-        "SELECT id, name, slug, icon_url FROM topics WHERE slug = ? LIMIT 1", [slug]);
+  const [rows] = await pool.query<TopicRow[]>(`
+    SELECT t.id, t.name, t.slug, t.icon_url, t.parent_id,
+           parent.name AS parent_name, parent.slug AS parent_slug
+    FROM topics t
+    LEFT JOIN topics parent ON parent.id = t.parent_id
+    WHERE t.slug = ? AND t.is_active = 1
+    LIMIT 1
+  `, [slug]);
 
-    if (rows.length === 0) return null;
-
-    const row = rows[0];
-
-    return {
-        id: row.id,
-        name: row.name,
-        slug: row.slug,
-        iconUrl: row.icon_url,
-    };
+  return rows[0] ? toTopic(rows[0]) : null;
 }
 
-export async function getAllTopics(): Promise<TopicDto[]> {
-    const [rows]: any = await pool.query(
-        "SELECT id, name, slug, icon_url FROM topics ORDER BY name ASC");
+export async function getTopicById(id: number): Promise<TopicDto | null> {
+  const [rows] = await pool.query<TopicRow[]>(`
+    SELECT t.id, t.name, t.slug, t.icon_url, t.parent_id
+    FROM topics t
+    WHERE t.id = ? AND t.is_active = 1
+    LIMIT 1
+  `, [id]);
 
-    return rows.map((row: any) => ({
-        id: row.id,
-        name: row.name,
-        slug: row.slug,
-        iconUrl: row.icon_url,
-    }));
+  return rows[0] ? toTopic(rows[0]) : null;
 }
 
-export async function getTopicIdsBySlugs(slugs: string[]): Promise<number[]> {
-    if (!slugs || slugs.length === 0) return [];
+export async function getSubTopics(parentId: number): Promise<TopicDto[]> {
+  const [rows] = await pool.query<TopicRow[]>(`
+    SELECT id, name, slug, icon_url, parent_id
+    FROM topics
+    WHERE parent_id = ? AND is_active = 1
+    ORDER BY name ASC
+  `, [parentId]);
 
-    const [rows]: any = await pool.query(
-        "SELECT id FROM topics WHERE slug IN (?)",
-        [slugs]
-    );
+  return rows.map(toTopic);
+}
 
-    return rows.map((row: any) => row.id);
+// Kept for existing callers that need every active topic.
+export const getAllTopics = getSearchableTopics;
+export const getTopics = getSearchableTopics;
+
+export async function getTopicIdBySlug(slug: string): Promise<number | null> {
+  const topic = await getTopicBySlug(slug);
+  return topic?.id ?? null;
 }

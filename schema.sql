@@ -148,30 +148,44 @@ following_count = (
 //-------------------------------------------------------
 
 CREATE TABLE topics (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  slug VARCHAR(120) NOT NULL,
-  icon_url TEXT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    slug VARCHAR(120) NOT NULL UNIQUE,
+    parent_id BIGINT NULL,
+    icon_url VARCHAR(255) NULL,
+    is_trending BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE topics ADD CONSTRAINT chk_topics_not_own_parent CHECK (parent_id IS NULL OR parent_id <> id);
+ALTER TABLE topics ADD INDEX idx_topics_parent_active_name (parent_id, is_active, name);
+ALTER TABLE topics ADD INDEX idx_topics_active_trending_name (is_active, is_trending, name);
+
+ALTER TABLE topics
+ADD CONSTRAINT fk_topics_parent
+FOREIGN KEY (parent_id)
+REFERENCES topics(id)
+ON DELETE RESTRICT;
 
 CREATE TABLE poll_topics (
-  poll_id BIGINT NOT NULL,
-  topic_id BIGINT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    poll_id BIGINT NOT NULL,
+    topic_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-  PRIMARY KEY (poll_id, topic_id),
+    PRIMARY KEY (poll_id, topic_id),
 
-  CONSTRAINT fk_pt_poll
-    FOREIGN KEY (poll_id) REFERENCES polls(id)
-    ON DELETE CASCADE,
+    INDEX idx_pt_topic_poll (topic_id, poll_id),
 
-  CONSTRAINT fk_pt_topic
-    FOREIGN KEY (topic_id) REFERENCES topics(id)
-    ON DELETE CASCADE,
+    CONSTRAINT fk_pt_poll
+        FOREIGN KEY (poll_id)
+        REFERENCES polls(id)
+        ON DELETE CASCADE,
 
-  INDEX idx_pt_topic (topic_id)
+    CONSTRAINT fk_pt_topic
+        FOREIGN KEY (topic_id)
+        REFERENCES topics(id)
+        ON DELETE CASCADE
 );
 
 
@@ -207,6 +221,4 @@ CREATE TABLE notifications (
     INDEX idx_user_feed (user_id, is_read, created_at DESC, id DESC),
     INDEX idx_user_created (user_id,created_at DESC)
 );
-
-
 

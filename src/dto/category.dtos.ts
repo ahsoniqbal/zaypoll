@@ -11,5 +11,8 @@ export type TopicDto = {
     name: string;
     slug: string;
     iconUrl: string | null;
-    // createdAt: Date | string;
+    parentId?: number | null;
+    parentName?: string | null;
+    parentSlug?: string | null;
+    childCount?: number;
 };

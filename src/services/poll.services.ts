@@ -28,7 +28,7 @@ export async function getPolls(
     page: number = 1,
     limit: number = DEFAULT_PAGE_LIMIT,
     feedType: "for_you" | "following" = "for_you",
-    topicId?: number | null,
+    topicIds?: number | number[] | null,
     sortBy: "latest" | "top" = "top"
 ): Promise<PagedResponse<PollListingDto>> {
 
@@ -43,10 +43,13 @@ export async function getPolls(
     const filterParams: any[] = [];
     let joinTopic = "";
 
-    if (topicId) {
+    const normalizedTopicIds = (Array.isArray(topicIds) ? topicIds : [topicIds])
+        .filter((topicId): topicId is number => typeof topicId === "number" && topicId > 0);
+
+    if (normalizedTopicIds.length > 0) {
         joinTopic = "INNER JOIN poll_topics pt ON pt.poll_id = p.id";
-        conditions.push("pt.topic_id = ?");
-        filterParams.push(topicId);
+        conditions.push(`pt.topic_id IN (${normalizedTopicIds.map(() => "?").join(", ")})`);
+        filterParams.push(...normalizedTopicIds);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";

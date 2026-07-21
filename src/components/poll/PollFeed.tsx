@@ -39,8 +39,6 @@ export default function PollFeed({
         />
       ))}
 
-
-
       <Pagination
         page={page}
         totalPages={totalPages}

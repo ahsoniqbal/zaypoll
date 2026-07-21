@@ -1,24 +1,31 @@
-import Link from "next/link";
-import { Search } from "lucide-react";
-
-import { getAllTopics } from "@/services/topic.service";
+import { Metadata } from "next";
+import { getParentTopics, getSearchableTopics } from "@/services/topic.service";
 import { getTrendingPolls } from "@/services/poll.services";
 
 import PollCard from "@/components/poll/PollCard";
 import { auth } from "@/auth";
 import ExploreTopics from "@/components/explore/ExploreTopics";
 
+export const metadata: Metadata = {
+  title: "Explore topics",
+  description: "Discover public polling communities and the conversations trending in each topic.",
+  alternates: { canonical: "/explore" },
+};
+
 export default async function ExplorePage() {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
-  const topics = await getAllTopics();
-  const trendingPolls = await getTrendingPolls(userId);
+  const [parentTopics, searchableTopics, trendingPolls] = await Promise.all([
+    getParentTopics(),
+    getSearchableTopics(),
+    getTrendingPolls(userId),
+  ]);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-10">
+    <div className="mx-auto max-w-6xl space-y-10 px-4 py-6 sm:py-8">
 
-     <ExploreTopics topics={topics}  />
+      <ExploreTopics parentTopics={parentTopics} searchableTopics={searchableTopics} />
 
       {/* ================= TRENDING POLLS ================= */}
       <section>
@@ -32,7 +39,7 @@ export default async function ExplorePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {trendingPolls.map((poll) => (
             <PollCard
               key={poll.pollId}

@@ -3,7 +3,7 @@
 import { toggleReactionAction } from "@/actions/poll.actions";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { useState, useTransition } from "react";
-import { ChevronUp, ChevronDown, ArrowBigUp, ArrowBigDown } from "lucide-react";
+import { ArrowBigUp, ArrowBigDown } from "lucide-react";
 
 
 type Props = {
@@ -21,7 +21,7 @@ export default function PollReactions({
     userVote,
     isUserLoggedIn,
 }: Props) {
-    const [isPending, startTransition] = useTransition();
+    const [, startTransition] = useTransition();
     const [isLocked, setIsLocked] = useState(false);
     const { open } = useAuthModal();
 
@@ -32,7 +32,7 @@ export default function PollReactions({
     });
 
 
-    const handleReaction = (e: any, vote: 1 | -1) => {
+    const handleReaction = (e: React.MouseEvent<HTMLButtonElement>, vote: 1 | -1) => {
         e.stopPropagation();
         if (!isUserLoggedIn) {
             open(); //show login modal
@@ -45,7 +45,8 @@ export default function PollReactions({
 
         //optimistic UI update
         setState((prev) => {
-            let { reaction, upvotes, downvotes } = prev;
+            const { reaction } = prev;
+            let { upvotes, downvotes } = prev;
 
             if (reaction === vote) {
                 if (vote === 1) upvotes--;
@@ -80,30 +81,34 @@ export default function PollReactions({
     };
 
     return (
-        <div className="flex items-center gap-1 bg-gray-200 rounded-2xl">
+        <div className="flex items-center gap-1 rounded-full bg-muted p-0.5">
 
             <button
                 type="button"
+                aria-label="Upvote poll"
+                aria-pressed={state.reaction === 1}
                 onClick={(e) => handleReaction(e, 1)}
                 className={`flex items-center justify-center h-8 w-8 rounded-full transition-all
                 ${state.reaction === 1
                         ? "bg-orange-100 text-orange-600"
-                        : "text-black/80 hover:bg-gray-300 hover:text-orange-500"} `}
+                        : "text-muted-foreground hover:bg-background hover:text-orange-500"} `}
             >
                 <ArrowBigUp className="w-5 h-5" />
             </button>
  
-            <span className="text-sm font-medium text-center p-0 m-0">
+            <span className="min-w-5 text-center text-xs font-medium tabular-nums">
                 {state.upvotes - state.downvotes}
             </span>
 
             <button
                 type="button"
+                aria-label="Downvote poll"
+                aria-pressed={state.reaction === -1}
                 onClick={(e) => handleReaction(e, -1)}
                 className={`flex items-center justify-center h-8 w-8 rounded-full transition-all
             ${state.reaction === -1
                         ? "bg-blue-100 text-blue-600"
-                        : "text-black/80 hover:bg-gray-300 hover:text-blue-500"}`}
+                        : "text-muted-foreground hover:bg-background hover:text-blue-500"}`}
             >
                 <ArrowBigDown className="w-5 h-5" />
             </button>

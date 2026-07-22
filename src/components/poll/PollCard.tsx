@@ -82,7 +82,7 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
     }
 
     return (
-        <div className={`bg-white border rounded-xl p-4 transition hover:shadow-md cursor-pointer`}
+        <article className="cursor-pointer rounded-xl bg-card p-4 ring-1 ring-foreground/10 transition-colors hover:bg-card/80 sm:p-5"
             onClick={(e) => {
                 const target = e.target as HTMLElement;
                 if (target.closest("input, button, textarea, a, label")) return; //Ignore clicks on interactive elements
@@ -97,11 +97,13 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                 createdAt={poll.createdAt}
             />
 
-            <div className="mt-3 mb-4">
+            <div className="mb-4 mt-3">
                 {poll.title && (
-                    <h3 className="text-base font-semibold text-gray-900 mb-1">{poll.title}</h3>
+                    <h2 className="mb-1 text-base font-semibold leading-snug text-foreground">{poll.title}</h2>
                 )}
-                <p className="text-sm text-gray-600 leading-6">{poll.content}</p>
+                {poll.content && (
+                    <p className="text-sm leading-6 text-muted-foreground">{poll.content}</p>
+                )}
             </div>
 
             <PollOptions
@@ -163,6 +165,6 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
 
             </div>
 
-        </div>
+        </article>
     );
 }

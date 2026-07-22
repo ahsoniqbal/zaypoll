@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
-import { ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon } from "lucide-react";
+import { ArrowLeftIcon } from "lucide-react";
 
 export default function BackButton() {
     const router = useRouter();
@@ -13,7 +13,7 @@ export default function BackButton() {
 
     return (
 
-        <Button onClick={handleBack} className="cursor-pointer" variant="secondary" aria-label="Submit">
+        <Button onClick={handleBack} variant="ghost" aria-label="Go back">
             <ArrowLeftIcon /> Back
         </Button>
     );

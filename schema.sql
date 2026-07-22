@@ -53,7 +53,7 @@ CREATE TABLE auth_rate_limits (
 CREATE TABLE polls (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255) NOT NULL,
-    content TEXT not NULL,
+    content TEXT,
     total_votes BIGINT DEFAULT 0,
     upvotes BIGINT DEFAULT 0,
     downvotes BIGINT DEFAULT 0,

@@ -4,8 +4,10 @@ import { auth } from "@/auth";
 import {
   getNotifications,
   getUnreadCount,
+  markAllAsRead,
   markAsRead,
 } from "@/services/notification.service";
+import { revalidatePath } from "next/cache";
 
 import { getNotificationBundle } from "@/services/notification.service";
 
@@ -46,5 +48,16 @@ export async function readNotification(notificationId: number) {
   const session = await auth();
   if (!session?.user?.id) return;
 
-  return await markAsRead(session.user.id, notificationId);
+  const result = await markAsRead(session.user.id, notificationId);
+  revalidatePath("/notifications");
+  return result;
+}
+
+export async function readAllNotifications() {
+  const session = await auth();
+  if (!session?.user?.id) return;
+
+  const result = await markAllAsRead(session.user.id);
+  revalidatePath("/notifications");
+  return result;
 }

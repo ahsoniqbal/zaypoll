@@ -1,7 +1,7 @@
 import { getUser } from "@/services/user.services"
 import { notFound } from "next/navigation";
 import UserUpdate from "./UserUpdate";
-import { User } from "../user";
+import { User } from "@/types/user.types";
 
 export default async function UserPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -14,11 +14,11 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
 
     return (
 
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="mx-auto max-w-4xl grid gap-6 md:grid-cols-2">
+        <main className="min-h-screen bg-muted/30 p-4 sm:p-6">
+            <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
                 <UserUpdate user={user}/>
             </div>
-        </div>
+        </main>
 
     )
 }

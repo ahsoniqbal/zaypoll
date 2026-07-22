@@ -1,61 +1,34 @@
 "use client";
 
+import { X } from "lucide-react";
 import { googleLogin, sendMagicLink } from "@/actions/auth.action";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-type Props = {
-  isOpen: boolean;
-  onClose: () => void;
-};
+type Props = { isOpen: boolean; onClose: () => void };
 
 export default function LoginModal({ isOpen, onClose }: Props) {
   if (!isOpen) return null;
 
   return (
-    
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 relative" onClick={(e) => e.stopPropagation()}>
-
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-black"
-        >
-          ✕
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-[2px] sm:items-center sm:p-4" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-labelledby="login-modal-title" className="relative w-full max-w-md rounded-t-2xl bg-card p-6 shadow-xl ring-1 ring-foreground/10 sm:rounded-2xl" onClick={(event) => event.stopPropagation()}>
+        <button type="button" onClick={onClose} aria-label="Close sign-in dialog" className="absolute right-3 top-3 rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+          <X className="h-4 w-4" />
         </button>
-
-        <h2 className="text-xl font-semibold text-center mb-4">
-          Sign in to continue
-        </h2>
-
-        {/* ✅ Google Login */}
+        <h2 id="login-modal-title" className="text-center text-xl font-semibold tracking-tight">Welcome to Zaypoll</h2>
+        <p className="mb-6 mt-1 text-center text-sm text-muted-foreground">Sign in to vote and join the discussion.</p>
         <form action={googleLogin} className="mb-4">
-          <button className="w-full py-2 rounded-lg bg-red-500 text-white hover:bg-red-600">
-            Continue with Google
-          </button>
+          <Button type="submit" variant="outline" size="lg" className="w-full">Continue with Google</Button>
         </form>
-
-        {/* Divider */}
-        <div className="flex items-center my-4">
-          <div className="flex-grow h-px bg-gray-300" />
-          <span className="px-2 text-sm text-gray-500">OR</span>
-          <div className="flex-grow h-px bg-gray-300" />
+        <div className="my-4 flex items-center gap-3" aria-hidden="true">
+          <div className="h-px flex-1 bg-border" /><span className="text-xs uppercase tracking-wider text-muted-foreground">or</span><div className="h-px flex-1 bg-border" />
         </div>
-
-        {/* ✅ Magic Link Form */}
-        <form action={sendMagicLink} className="space-y-4">
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            required
-            className="w-full px-3 py-2 border rounded-lg"
-          />
-
-          <button className="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-            Send Magic Link
-          </button>
+        <form action={sendMagicLink} className="space-y-3">
+          <label htmlFor="modal-email" className="text-sm font-medium">Email address</label>
+          <Input id="modal-email" type="email" name="email" autoComplete="email" placeholder="you@example.com" required />
+          <Button type="submit" size="lg" className="w-full">Email me a sign-in link</Button>
         </form>
-
       </div>
     </div>
   );

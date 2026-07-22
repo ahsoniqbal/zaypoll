@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { toggleFollowAction } from "@/actions/user.actions";
 import { useAuthModal } from "@/hooks/useAuthModal";
+import { LoaderCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Props = {
     userId: number;
@@ -37,13 +39,16 @@ export default function FollowButton({
     };
 
     return (
-        <button
+        <Button
+            type="button"
             onClick={handleToggle}
             disabled={isPending}
-            className={`px-4 py-2 rounded text-white ${isFollowing ? "bg-gray-500" : "bg-blue-600"
-                }`}
+            aria-pressed={isFollowing}
+            variant={isFollowing ? "outline" : "default"}
+            className="w-full min-w-24 sm:w-auto"
         >
-            {isFollowing ? "Unfollow" : "Follow"}
-        </button>
+            {isPending && <LoaderCircle className="animate-spin" />}
+            {isPending ? "Updating" : isFollowing ? "Following" : "Follow"}
+        </Button>
     );
 }

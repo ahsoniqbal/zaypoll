@@ -64,4 +64,3 @@ const baseStyles = "rounded-full font-medium transition-transform active:scale-[
     </Button>
   )
 }
-``

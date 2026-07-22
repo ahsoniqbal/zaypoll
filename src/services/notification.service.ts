@@ -1,5 +1,5 @@
 import pool from "@/lib/db";
-import { ResultSetHeader } from "mysql2";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { AppError } from "@/lib/error";
 import { Notification, NotificationData, NotificationType } from "@/types/notification.types";
 
@@ -13,22 +13,44 @@ export type CreateNotificationDto = {
 };
 
 
-function safeParseJSON(value: any) {
+function safeParseJSON(value: unknown): NotificationData | undefined {
     try {
-        return typeof value === "string" ? JSON.parse(value) : value;
+        const parsed = typeof value === "string" ? JSON.parse(value) : value;
+        return parsed && typeof parsed === "object"
+            ? parsed as NotificationData
+            : undefined;
     } catch {
-        return null;
+        return undefined;
     }
 }
 
-export type NotificationDto = {
+type NotificationRow = RowDataPacket & {
     id: number;
     type: NotificationType;
     is_read: number;
     created_at: string;
-    actorUserName?: string;
-    data?: NotificationData;
+    actor_username: string | null;
+    reference_type: string;
+    reference_id: number;
+    related_poll_id: number | null;
+    data: unknown;
 };
+
+type CountRow = RowDataPacket & { count: number };
+
+function toNotification(row: NotificationRow): Notification {
+    return {
+        id: row.id,
+        type: row.type,
+        is_read: row.is_read,
+        created_at: row.created_at,
+        actor_username: row.actor_username ?? undefined,
+        reference_type: row.reference_type,
+        reference_id: row.reference_id,
+        related_poll_id: row.related_poll_id,
+        data: safeParseJSON(row.data),
+    };
+}
 
 export async function createNotification(dto: CreateNotificationDto) {
     const {
@@ -62,23 +84,24 @@ export async function createNotification(dto: CreateNotificationDto) {
 
 
 export async function getNotifications(userId: number, limit: number = 20): Promise<Notification[]> {
-    const [rows]: any = await pool.query(
-        `SELECT n.*, u.user_name as actor_username FROM notifications n
+    const [rows] = await pool.query<NotificationRow[]>(
+        `SELECT n.*, u.user_name as actor_username, po.poll_id as related_poll_id
+        FROM notifications n
             LEFT JOIN users u ON u.id = n.actor_user_id
+            LEFT JOIN option_comments oc
+              ON n.reference_type = 'COMMENT' AND oc.id = n.reference_id
+            LEFT JOIN poll_options po ON po.id = oc.option_id
         WHERE n.user_id = ?
         ORDER BY n.created_at DESC
         LIMIT ?`,
         [userId, limit]
     );
 
-    return rows.map((n: any) => ({
-        ...n,
-        data: safeParseJSON(n.data),
-    }));
+    return rows.map(toNotification);
 }
 
 export async function getUnreadCount(userId: number): Promise<number> {
-    const [rows]: any = await pool.query(
+    const [rows] = await pool.query<CountRow[]>(
         `
     SELECT COUNT(*) as count
     FROM notifications
@@ -95,12 +118,15 @@ export async function getNotificationBundle(userId: number, limit = 20): Promise
     unreadCount: number;
 }> {
 
-    const [notificationsRes, countRes]: any = await Promise.all([
-        pool.query(
+    const [notificationsRes, countRes] = await Promise.all([
+        pool.query<NotificationRow[]>(
             `
-     SELECT n.*, u.user_name as actor_username
+     SELECT n.*, u.user_name as actor_username, po.poll_id as related_poll_id
 FROM notifications n
 LEFT JOIN users u ON u.id = n.actor_user_id
+LEFT JOIN option_comments oc
+  ON n.reference_type = 'COMMENT' AND oc.id = n.reference_id
+LEFT JOIN poll_options po ON po.id = oc.option_id
 WHERE n.user_id = ?
 ORDER BY n.created_at DESC
 LIMIT ?
@@ -108,7 +134,7 @@ LIMIT ?
             [userId, limit]
         ),
 
-        pool.query(
+        pool.query<CountRow[]>(
             `
       SELECT COUNT(*) as count
       FROM notifications
@@ -118,14 +144,11 @@ LIMIT ?
         ),
     ]);
 
-    const notifications: Notification[] = notificationsRes[0].map((n: any) => ({
-        ...n,
-        data: safeParseJSON(n.data),
-    }));
+    const notifications = notificationsRes[0].map(toNotification);
 
     return {
         notifications,
-        unreadCount: countRes?.[0][0].count ?? 0,
+        unreadCount: countRes[0][0]?.count ?? 0,
     };
 }
 

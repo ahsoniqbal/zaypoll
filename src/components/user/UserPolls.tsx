@@ -25,9 +25,14 @@ export default async function UserPolls({
   return (
     <>
       {/* Poll List */}
-      <div className="space-y-4 mt-3">
+      <div className="space-y-4">
         {res.data.length === 0 ? (
-          <p className="text-gray-500 text-sm">No polls yet</p>
+          <div className="rounded-xl border border-dashed px-6 py-14 text-center">
+            <p className="text-sm font-medium text-foreground">No polls yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Polls created by this user will appear here.
+            </p>
+          </div>
         ) : (
           res.data.map((poll) => (
             <PollCard

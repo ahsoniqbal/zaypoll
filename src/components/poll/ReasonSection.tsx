@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CommentDto, PollOptionDto } from "@/dto/poll.dtos";
 import { getPollReasonsAction } from "@/actions/poll.actions";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -73,46 +73,51 @@ export default function ReasonSection({
     }
   };
 
-  // =========================
-  // FETCH COMMENTS (lazy + cached)
-  // =========================
-  const fetchComments = async () => {
-    if (commentsMap[cacheKey]) return;
-
+  const loadComments = async (
+    option: number | "all",
+    sort: "top" | "latest"
+  ) => {
+    const nextCacheKey = `${option}_${sort}`;
+    if (commentsMap[nextCacheKey]) return;
     setLoading(true);
     try {
-      const optionId =
-        selectedOptionId === ALL ? null : Number(selectedOptionId);
-
-      const data = await getPollReasonsAction(pollId, optionId as any, sortBy);
+      const optionId = option === ALL ? null : option;
+      const data = await getPollReasonsAction(pollId, optionId, sort);
 
       setCommentsMap(prev => ({
         ...prev,
-        [cacheKey]: data || [],
+        [nextCacheKey]: data || [],
       }));
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchComments();
-  }, [selectedOptionId, sortBy]);
+  const selectOption = (option: number | "all") => {
+    setSelectedOptionId(option);
+    void loadComments(option, sortBy);
+  };
+
+  const changeSort = (sort: "top" | "latest") => {
+    setSortBy(sort);
+    void loadComments(selectedOptionId, sort);
+  };
 
   // =========================
   // UI
   // =========================
   return (
-    <div className="space-y-5">
+    <section className="space-y-5 border-t pt-5">
 
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between gap-4">
         <h2 className="text-lg font-semibold">Reasons</h2>
 
         <select
           value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as any)}
-          className="text-sm border rounded-lg px-3 py-1"
+          aria-label="Sort reasons"
+          onChange={(e) => changeSort(e.target.value as "top" | "latest")}
+          className="rounded-lg border bg-background px-3 py-1.5 text-sm"
         >
           <option value="top">Top</option>
           <option value="latest">Latest</option>
@@ -132,10 +137,12 @@ export default function ReasonSection({
       {/* Tabs */}
       <div className="flex flex-wrap gap-2">
         <button
-          onClick={() => setSelectedOptionId(ALL)}
-          className={`px-4 py-2 rounded-full text-sm ${selectedOptionId === ALL
-            ? "bg-black text-white"
-            : "bg-gray-100"
+          onClick={() => selectOption(ALL)}
+          type="button"
+          aria-pressed={selectedOptionId === ALL}
+          className={`rounded-full px-3 py-1.5 text-sm transition-colors ${selectedOptionId === ALL
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted text-muted-foreground hover:text-foreground"
             }`}
         >
           All
@@ -143,11 +150,13 @@ export default function ReasonSection({
 
         {options.map((opt) => (
           <button
+            type="button"
             key={opt.id}
-            onClick={() => setSelectedOptionId(opt.id)}
-            className={`px-4 py-2 rounded-full text-sm ${selectedOptionId === opt.id
-              ? "bg-black text-white"
-              : "bg-gray-100"
+            onClick={() => selectOption(opt.id)}
+            aria-pressed={selectedOptionId === opt.id}
+            className={`max-w-full truncate rounded-full px-3 py-1.5 text-sm transition-colors ${selectedOptionId === opt.id
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:text-foreground"
               }`}
           >
             {opt.optionText}
@@ -159,33 +168,33 @@ export default function ReasonSection({
       <div className="space-y-4">
 
         {loading && (
-          <p className="text-center text-gray-500">Loading...</p>
+          <div role="status" className="space-y-3 py-2"><span className="sr-only">Loading reasons…</span>{[1,2].map((item) => <div key={item} className="h-20 animate-pulse rounded-xl bg-muted motion-reduce:animate-none" />)}</div>
         )}
 
         {!loading && comments.length === 0 && (
-          <p className="text-center text-gray-400">No reasons yet</p>
+          <div className="rounded-xl border border-dashed px-5 py-10 text-center"><p className="text-sm font-medium">No reasons yet</p><p className="mt-1 text-sm text-muted-foreground">Be the first voter to explain your choice.</p></div>
         )}
 
         {comments.map((comment) => (
           <article key={comment.id} className="flex gap-3">
 
             <Avatar>
-              <AvatarImage src="https://github.com/shadcn.png" />
+              {comment.user.image && <AvatarImage src={comment.user.image} alt={`${comment.user.name}'s profile`} />}
               <AvatarFallback>
                 {comment.user.name.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
 
-            <div className="flex-1 bg-gray-50 border rounded-2xl px-4 py-2">
+            <div className="min-w-0 flex-1 rounded-2xl bg-muted/60 px-4 py-3">
 
-              <p className="font-semibold">
+              <p className="text-sm font-medium">
                 {comment.user.name}
-                <span className="text-sm text-gray-500 ml-2">
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
                   • {format(new Date(comment.createdAt), "MMM d")}
                 </span>
               </p>
 
-              <p className="text-gray-700">{comment.comment}</p>
+              <p className="mt-1 break-words text-sm leading-6 text-foreground">{comment.comment}</p>
 
               <div className="mt-2">
                 <CommentReactions
@@ -201,6 +210,6 @@ export default function ReasonSection({
           </article>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

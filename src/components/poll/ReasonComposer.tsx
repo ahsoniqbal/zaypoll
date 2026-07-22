@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { addReasonAction } from "@/actions/poll.actions";
-import { AppButton } from "../AppButton";
 import { toast } from "react-hot-toast/headless";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { Button } from "../ui/button";

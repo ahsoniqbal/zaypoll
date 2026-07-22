@@ -10,7 +10,7 @@ export default function AuthLayout({
     <>
       <Navbar />
 
-      <main className="flex items-center justify-center min-h-screen">
+      <main className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-muted/30 px-4 py-10">
         {children}
       </main>
     </>

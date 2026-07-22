@@ -6,7 +6,7 @@ type Props = {
     isDisabled?: boolean;
 };
 
-export default function ({ pollId, isDisabled = false }: Props) {
+export default function PollCommentButton({ pollId, isDisabled = false }: Props) {
     return (
         isDisabled ? (
             <Button variant="ghost" className="rounded-full" disabled>

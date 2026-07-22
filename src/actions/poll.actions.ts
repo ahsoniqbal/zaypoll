@@ -6,7 +6,14 @@ import { AppError } from "@/lib/error";
 import { addReason, castVote, createPoll, getCommentsByOptionId, getPollReasons, toggleCommentReaction, togglePollReaction } from "@/services/poll.services";
 import { ActionResponse } from "@/types/common.types";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import {
+    POLL_DESCRIPTION_MAX_LENGTH,
+    POLL_MAX_OPTIONS,
+    POLL_MAX_TOPICS,
+    POLL_MIN_OPTIONS,
+    POLL_OPTION_MAX_LENGTH,
+    POLL_TITLE_MAX_LENGTH,
+} from "@/types/constants";
 
 export async function createPollAction(
     formData: FormData
@@ -20,9 +27,11 @@ export async function createPollAction(
             throw new AppError("Unauthorized");
         }
 
-        const title = formData.get("title")?.toString().trim();
-        const content = formData.get("content")?.toString().trim();        
-        const topicIds = formData.getAll("topicIds").map(String);
+        const title = formData.get("title")?.toString().trim() ?? "";
+        const content = formData.get("content")?.toString().trim() ?? "";
+        const topicIds = [...new Set(
+            formData.getAll("topicIds").map((value) => Number(value))
+        )];
 
         // extract options
         const options: string[] = [];
@@ -34,16 +43,40 @@ export async function createPollAction(
         }
 
         //validation
-        if (!title || !content) {
-            throw new AppError("All fields are required");
+        if (!title) {
+            throw new AppError("Poll title is required");
         }
 
-        if (options.length < 2 || options.length > 6) {
-            throw new AppError("Poll must have between 2 and 6 options");
+        if (title.length > POLL_TITLE_MAX_LENGTH) {
+            throw new AppError(`Title must be ${POLL_TITLE_MAX_LENGTH} characters or fewer`);
+        }
+
+        if (content.length > POLL_DESCRIPTION_MAX_LENGTH) {
+            throw new AppError(`Description must be ${POLL_DESCRIPTION_MAX_LENGTH} characters or fewer`);
+        }
+
+        if (options.length < POLL_MIN_OPTIONS || options.length > POLL_MAX_OPTIONS) {
+            throw new AppError(`Poll must have between ${POLL_MIN_OPTIONS} and ${POLL_MAX_OPTIONS} options`);
         }
 
         if (options.some((opt) => !opt)) {
             throw new AppError("Options cannot be empty");
+        }
+
+        if (options.some((option) => option.length > POLL_OPTION_MAX_LENGTH)) {
+            throw new AppError(`Each option must be ${POLL_OPTION_MAX_LENGTH} characters or fewer`);
+        }
+
+        if (new Set(options.map((option) => option.toLocaleLowerCase())).size !== options.length) {
+            throw new AppError("Poll options must be unique");
+        }
+
+        if (topicIds.length > POLL_MAX_TOPICS) {
+            throw new AppError(`You can select up to ${POLL_MAX_TOPICS} topics`);
+        }
+
+        if (topicIds.some((topicId) => !Number.isSafeInteger(topicId) || topicId <= 0)) {
+            throw new AppError("Invalid topic selected");
         }
 
         const pollId = await createPoll({
@@ -51,7 +84,7 @@ export async function createPollAction(
             content,
             options,
             createdBy: userId,
-            topicIds: topicIds.map(Number),
+            topicIds,
         });
 
 

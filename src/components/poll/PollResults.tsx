@@ -33,7 +33,7 @@ export default function PollResults({
                 const isSelected = opt.id === userVoteOptionId;
 
                 return (
-                    <div key={opt.id} className="group relative w-full rounded-lg overflow-hidden border p-3">
+                    <div key={opt.id} className="group relative w-full overflow-hidden rounded-lg border bg-background p-3">
                         {/* Progress */}
                         <div className={clsx(
                                 "absolute left-0 inset-y-0 transition-all duration-700 ease-out",
@@ -71,8 +71,8 @@ export default function PollResults({
             })}
 
             {/* Total */}
-            <div className="text-xs text-gray-500">
-                {totalVotes} votes
+            <div className="text-xs tabular-nums text-muted-foreground">
+                {totalVotes} {totalVotes === 1 ? "vote" : "votes"}
             </div>
         </div>
     );

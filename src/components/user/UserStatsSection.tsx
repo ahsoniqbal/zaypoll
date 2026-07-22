@@ -1,27 +1,27 @@
 import { getUserStats } from "@/services/user.services";
 
-export default async function UserStatsSection({ userId }: any) {
+export default async function UserStatsSection({ userId }: { userId: number }) {
   const userStats = await getUserStats(userId);
 
   return (
-     <div className="flex gap-6 mt-4 text-sm">
+     <dl className="flex flex-wrap gap-x-6 gap-y-3 text-sm">
 
-            <div>
-              <p className="font-semibold text-gray-900">{userStats.totalPolls ?? 0}</p>
-              <p className="text-gray-500 text-xs">Polls</p>
+            <div className="min-w-12">
+              <dd className="font-semibold tabular-nums text-foreground">{userStats.totalPolls ?? 0}</dd>
+              <dt className="text-xs text-muted-foreground">Polls</dt>
             </div>
 
             <div>
-              <p className="font-semibold text-gray-900">{userStats.totalVotes ?? 0}</p>
-              <p className="text-gray-500 text-xs">Votes</p>
+              <dd className="font-semibold tabular-nums text-foreground">{userStats.totalVotes ?? 0}</dd>
+              <dt className="text-xs text-muted-foreground">Votes</dt>
             </div>
 
             <div>
-              <p className="font-semibold text-gray-900">{userStats.totalComments ?? 0}</p>
-              <p className="text-gray-500 text-xs">Comments</p>
+              <dd className="font-semibold tabular-nums text-foreground">{userStats.totalComments ?? 0}</dd>
+              <dt className="text-xs text-muted-foreground">Comments</dt>
             </div>
 
-          </div>
+          </dl>
 
   );
 }

@@ -13,7 +13,8 @@ export default function PollVoting({ options, selectedOption, onSelect }: Props)
 
     return (
 
-        <div className="space-y-2">
+        <fieldset className="space-y-2">
+            <legend className="sr-only">Choose an option</legend>
             {options.map((opt) => {
                 const isSelected = selectedOption === opt.id;
 
@@ -21,33 +22,32 @@ export default function PollVoting({ options, selectedOption, onSelect }: Props)
                     <label
                         key={opt.id}
                         className={`
-          flex items-center h-12 px-4 gap-3 rounded-lg border transition-all cursor-pointer
+          flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 transition-colors
           ${isSelected
-                                ? "bg-gray-100 border-black"
-                                : "bg-white hover:bg-gray-50 border-gray-200"}
+                                ? "border-primary bg-primary/5"
+                                : "bg-background hover:bg-muted/60"}
         `}
                     >
                         <input
                             type="radio"
                             checked={isSelected}
                             onChange={() => onSelect(opt.id)}
-                            className="h-5 w-5 accent-black cursor-pointer
-          transition-transform duration-150
-          checked:scale-110 "
+                            name="poll-option"
+                            className="h-4 w-4 cursor-pointer accent-primary"
                         />
 
-                        <span className="text-sm text-gray-800">
+                        <span className="text-sm text-foreground">
                             {opt.optionText}
                         </span>
                     </label>
                 );
             })}
             
-<p className="text-xs text-gray-500 mb-1">
+<p className="mb-1 text-xs text-muted-foreground">
     Select an option to vote
   </p>
 
-        </div>
+        </fieldset>
 
 
     );

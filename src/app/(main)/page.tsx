@@ -35,7 +35,7 @@ export default async function Home({
     await getPolls(userId, pageNumber, DEFAULT_PAGE_LIMIT, feed, null, "latest");
 
   return (
-    <main className="flex-1 max-w-3xl w-full mt-4 min-w-0">
+    <main className="mt-4 w-full min-w-0 max-w-3xl flex-1">
       <ToastHandler message={success} />
 
       <PollList

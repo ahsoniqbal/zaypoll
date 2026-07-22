@@ -23,14 +23,14 @@ export default async function ExplorePage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-10 px-4 py-6 sm:py-8">
+    <main className="mx-auto max-w-5xl space-y-10 px-1 py-6 sm:px-4 sm:py-8">
 
       <ExploreTopics parentTopics={parentTopics} searchableTopics={searchableTopics} />
 
       {/* ================= TRENDING POLLS ================= */}
       <section>
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-foreground">
             Trending Polls
           </h2>
 
@@ -39,7 +39,7 @@ export default async function ExplorePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           {trendingPolls.map((poll) => (
             <PollCard
               key={poll.pollId}
@@ -49,8 +49,6 @@ export default async function ExplorePage() {
           ))}
         </div>
       </section>
-
-    
-    </div>
+    </main>
   );
 }

@@ -51,7 +51,7 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
     }
 
     return (
-        <div className={`bg-white border rounded-xl p-4 transition ${!isDetailView ? "hover:shadow-md cursor-pointer" : ""}`}
+        <article className={`rounded-xl bg-card p-4 ring-1 ring-foreground/10 sm:p-5 ${!isDetailView ? "cursor-pointer transition-colors hover:bg-card/80" : ""}`}
             onClick={(e) => {
                 if (isDetailView) return;
                 const target = e.target as HTMLElement;
@@ -69,9 +69,11 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
 
             <div className="mt-3 mb-4">
                 {poll.title && (
-                    <h3 className="text-base font-semibold text-gray-900 mb-1">{poll.title}</h3>
+                    <h1 className="mb-1 text-lg font-semibold leading-snug text-foreground">{poll.title}</h1>
                 )}
-                <p className="text-sm text-gray-600 leading-6">{poll.content}</p>
+                {poll.content && (
+                    <p className="text-sm leading-6 text-muted-foreground">{poll.content}</p>
+                )}
             </div>
 
             <PollOptions
@@ -139,6 +141,6 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
                     />
                 </div>
             }
-        </div>
+        </article>
     );
 }

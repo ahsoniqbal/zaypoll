@@ -1,7 +1,6 @@
 import { PollListingDto } from "@/dto/poll.dtos";
 import PollCard from "./PollCard";
 import Pagination from "../Pagination";
-import Link from "next/link";
 
 type Props = {
   polls: PollListingDto[];
@@ -11,21 +10,24 @@ type Props = {
   hasPrev: boolean;
   isUserLoggedIn: boolean;
   basePath: string;
-  query?: Record<string, any>;
+  query?: Record<string, string>;
 };
 
 export default function PollFeed({
   polls,
   page,
   totalPages,
-  hasNext,
-  hasPrev,
   isUserLoggedIn,
   basePath,
   query,
 }: Props) {
   if (polls.length === 0) {
-    return <div className="text-center mt-10">No polls found</div>;
+    return (
+      <div className="rounded-xl border border-dashed px-6 py-14 text-center">
+        <p className="text-sm font-medium">No polls found</p>
+        <p className="mt-1 text-sm text-muted-foreground">Try another feed or explore a different topic.</p>
+      </div>
+    );
   }
 
   return (

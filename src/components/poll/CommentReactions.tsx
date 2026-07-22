@@ -20,7 +20,7 @@ export default function CommentReactions({
     userVote,
     isUserLoggedIn,
 }: Props) {
-    const [isPending, startTransition] = useTransition();
+    const [, startTransition] = useTransition();
     const [isLocked, setIsLocked] = useState(false);
     const { open } = useAuthModal();
 
@@ -42,15 +42,18 @@ export default function CommentReactions({
 
         //SAME LOGIC (reused)
         setState((prev) => {
-            let { reaction, upvotes, downvotes } = prev;
+            const { reaction } = prev;
+            let { upvotes, downvotes } = prev;
 
             if (reaction === vote) {
-                (vote === 1) ? upvotes-- : downvotes--;
+                if (vote === 1) upvotes--;
+                else downvotes--;
                 return { reaction: null, upvotes, downvotes };
             }
 
             if (reaction === null) {
-                (vote === 1) ? upvotes++ : downvotes++;
+                if (vote === 1) upvotes++;
+                else downvotes++;
                 return { reaction: vote, upvotes, downvotes };
             }
 
@@ -79,25 +82,29 @@ export default function CommentReactions({
 
             {/* ✅ Upvote */}
             <button type="button" onClick={() => handleReaction(1)}
+                aria-label="Upvote reason"
+                aria-pressed={state.reaction === 1}
                 className={`flex items-center justify-center h-7 w-7 rounded-full transition-all
                 ${state.reaction === 1
                         ? "text-orange-600"
-                        : "text-gray-400 hover:bg-gray-100 hover:text-orange-500"}
+                        : "text-muted-foreground hover:bg-muted hover:text-orange-500"}
                     active:scale-90`}>
                 <ArrowBigUp className="w-5 h-5" />
             </button>
 
             {/* ✅ Score */}
-            <span className="text-xs font-medium text-gray-500 text-center">
+            <span className="min-w-4 text-center text-xs font-medium tabular-nums text-muted-foreground">
                 {state.upvotes - state.downvotes}
             </span>
 
             {/* ✅ Downvote */}
             <button type="button" onClick={() => handleReaction(-1)}
+                aria-label="Downvote reason"
+                aria-pressed={state.reaction === -1}
                 className={`flex items-center justify-center h-7 w-7 rounded-full transition-all
                 ${state.reaction === -1
                         ? "text-blue-600"
-                        : "text-gray-400 hover:bg-gray-100 hover:text-blue-500"}
+                        : "text-muted-foreground hover:bg-muted hover:text-blue-500"}
                     active:scale-90`}>
                 <ArrowBigDown className="w-5 h-5" />
             </button>

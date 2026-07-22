@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import UserContentSections from "@/components/user/UserContentSections";
 import UserProfileHeader from "@/components/user/UserProfileHeader";
-import { getUserDetails, getUserStats } from "@/services/user.services";
+import { getUserDetails } from "@/services/user.services";
 import { notFound } from "next/navigation";
 
 
@@ -17,10 +17,6 @@ export default async function UserPage({
 
     const { username } = await params;
 
-    // const user = await getUserDetails(username, loggedInUserId);
-
-
-
     const user = await getUserDetails(username, loggedInUserId);
 
     if (!user) return notFound();
@@ -30,8 +26,7 @@ export default async function UserPage({
     const isOwnProfile = loggedInUserId === user.id;
 
     return (
-        <div className="min-h-screen bg-gray-50 py-6">
-            <div className="max-w-4xl mx-auto space-y-6 px-4">
+        <main className="mx-auto w-full max-w-3xl space-y-8 px-1 py-4 sm:px-4 sm:py-8">
 
                 <UserProfileHeader
                     user={user}
@@ -41,12 +36,9 @@ export default async function UserPage({
 
                 <UserContentSections
                     userId={user.id}
-                    loggedInUserId={loggedInUserId}
                     username={username}
                     searchParams={searchParams}
                 />
-
-            </div>
-        </div>
+        </main>
     );
 }

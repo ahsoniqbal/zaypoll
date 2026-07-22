@@ -1,3 +1,5 @@
-export default function Loading(){
-    return <div>Loading...</div>;
+import { FormPageLoading } from "@/components/PageLoading";
+
+export default function Loading() {
+  return <FormPageLoading />;
 }

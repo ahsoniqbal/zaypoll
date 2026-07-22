@@ -1322,7 +1322,8 @@ export async function addReason(userId: number, pollId: number, optionId: number
             actorUserId: userId,
             type: "REASON_ADDED",
             referenceType: "COMMENT",
-            referenceId: result.insertId
+            referenceId: result.insertId,
+            data: { type: "REASON_ADDED", pollId, reasonId: result.insertId }
         })
             .catch(err => {
                 console.error("Notification failed:", err);

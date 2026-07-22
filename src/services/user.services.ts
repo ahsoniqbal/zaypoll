@@ -218,9 +218,7 @@ export async function toggleFollow(
                 type: "USER_FOLLOWED",
                 referenceType: "USER",
                 referenceId: followerId,
-                data: {
-                    action: "follow"
-                }
+                data: { type: "USER_FOLLOWED", userId: followerId }
             })
             .catch(err => {
                     console.error("Notification failed:", err);

@@ -12,12 +12,15 @@ import {
   User,
   PlusCircle,
   Users,
+  Bell,
+  Menu,
+  X,
   LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
 
 import { useAuthModal } from "@/hooks/useAuthModal";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AppButton } from "@/components/AppButton";
 import { cn } from "@/lib/utils";
@@ -32,9 +35,11 @@ type NavItem = {
 export default function Sidebar({
   isLoggedIn,
   username,
+  unreadCount,
 }: {
   isLoggedIn: boolean;
   username: string | null;
+  unreadCount: number;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -62,6 +67,12 @@ export default function Sidebar({
       name: "Explore",
       href: "/explore",
       icon: Compass,
+    },
+    {
+      name: "Notifications",
+      href: "/notifications",
+      icon: Bell,
+      authRequired: true,
     },
     {
       name: "Profile",
@@ -95,26 +106,28 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Mobile Toggle */}
       <button
-        className="md:hidden fixed top-16 left-4 z-50 bg-primary text-white px-3 py-2 rounded-md shadow"
+        type="button"
+        aria-label={isOpen ? "Close navigation" : "Open navigation"}
+        aria-expanded={isOpen}
+        className="fixed left-4 top-[4.5rem] z-50 rounded-full bg-primary p-2 text-primary-foreground shadow-sm ring-1 ring-primary/10 md:hidden"
         onClick={() => setIsOpen(!isOpen)}
       >
-        ☰
+        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed md:sticky top-0 left-0",
-          "h-screen md:h-auto",
+          "fixed left-0 top-16 md:sticky md:top-20",
+          "h-[calc(100dvh-4rem)] md:h-[calc(100dvh-6rem)]",
           "w-64 md:w-48",
           "bg-background md:bg-transparent",
           "border-r md:border-0",
-          "p-4 md:p-0",
-          "flex flex-col space-y-6 shrink-0",
+          "p-4 pt-14 md:p-px",
+          "flex shrink-0 flex-col space-y-6 overflow-y-auto overscroll-contain",
           "transform transition-transform duration-300 z-40",
-          "mt-4",
+          "md:mt-4",
           isOpen
             ? "translate-x-0"
             : "-translate-x-full md:translate-x-0"
@@ -153,10 +166,10 @@ export default function Sidebar({
                     )
                   }}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                     isActive
-                      ? "bg-primary text-primary-foreground font-medium shadow-sm"
-                      : "hover:bg-muted"
+                      ? "bg-primary text-primary-foreground font-medium"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                   
                 >
@@ -164,10 +177,14 @@ export default function Sidebar({
 
                   <span>{item.name}</span>
 
+                  {item.name === "Notifications" && unreadCount > 0 && (
+                    <Badge className="ml-auto min-w-5 justify-center px-1.5 py-0 text-[10px]">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </Badge>
+                  )}
+
                   {item.authRequired && !isLoggedIn && (
-                    <span className="ml-auto text-xs">
-                      🔒
-                    </span>
+                    <span className="sr-only">Login required</span>
                   )}
                 </Link>
               );
@@ -176,7 +193,7 @@ export default function Sidebar({
             {/* Create Poll */}
             <AppButton
               onClick={handleCreatePollClick}
-              className="mt-4 w-full gap-2"
+              className="mt-3 w-full gap-2"
               size="sm"
             >
               <PlusCircle size={16} />
@@ -185,37 +202,10 @@ export default function Sidebar({
           </CardContent>
         </Card>
 
-        {/* Topics */}
-        <Card>
-          <CardHeader className="border-b">
-            <h3 className="font-semibold">
-              Popular Topics
-            </h3>
-          </CardHeader>
-
-          <CardContent className="flex flex-wrap gap-2">
-            {[
-              "NextJS",
-              "TailwindCSS",
-              "UIUX",
-              "WebDev",
-              "Design",
-              "Productivity",
-              "RemoteWork",
-            ].map((topic) => (
-              <Badge
-                key={topic}
-                variant="secondary"
-                className="cursor-pointer hover:bg-secondary/80"
-              >
-                {topic}
-              </Badge>
-            ))}
-          </CardContent>
-        </Card>
-
         {/* Footer */}
-        <div className="text-xs text-center text-muted-foreground">
+        <div className="px-2 text-xs leading-5 text-muted-foreground">
+          <Link href="/explore" className="hover:text-foreground">Explore topics</Link>
+          <span className="mx-1.5">·</span>
           © {new Date().getFullYear()} Zaypoll
         </div>
       </aside>
@@ -223,7 +213,7 @@ export default function Sidebar({
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/30 md:hidden z-30"
+          className="fixed inset-x-0 bottom-0 top-16 z-30 bg-black/30 md:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}

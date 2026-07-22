@@ -2,7 +2,10 @@
 
 import { updateUserAction, } from "@/actions/user.actions"
 import { useEffect, useState, useTransition } from "react";
-import { User } from "../user";
+import { User } from "@/types/user.types";
+import { ActionResponse } from "@/types/common.types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function UserUpdate({ user }: {user: User}) {
 
@@ -28,7 +31,7 @@ export default function UserUpdate({ user }: {user: User}) {
 
 
     return (
-        <div className="max-w-md w-full bg-white p-6 rounded-xl shadow-sm border">
+        <section className="w-full max-w-md rounded-xl bg-card p-6 ring-1 ring-foreground/10">
             <h1 className="text-xl font-semibold mb-4">Update User</h1>
 
             {actionResponse && (
@@ -43,30 +46,29 @@ export default function UserUpdate({ user }: {user: User}) {
             )}
 
             <form action={handleSubmit} className="space-y-4">
-                <input
+                <Input
                     type="text"
-                    defaultValue={user.username}
+                    defaultValue={user.userName}
                     name="username"
                     placeholder="Username"
-                    className="w-full rounded-lg border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    
+                    required
                 />
-                <input
-                    type="text"
-                    defaultValue={user.password}
+                <Input
+                    type="password"
                     name="password"
                     placeholder="Password"
-                    className="w-full rounded-lg border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
                 />
 
-                <button
+                <Button
+                    type="submit"
                     disabled={isPending}
-                    className="w-full rounded-lg bg-blue-600 px-4 py-2 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full"
                 >
                     {isPending ? "Updating..." : "Update"}
-                </button>
+                </Button>
             </form>
-        </div>
+        </section>
 
     )
 }

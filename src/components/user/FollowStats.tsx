@@ -18,21 +18,23 @@ export default function FollowStats({
 
     return (
         <>
-            <div className="flex gap-4 mt-2 text-sm">
+            <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
                 <button
+                    type="button"
                     onClick={() => setModalType("followers")}
-                    className="font-medium text-gray-800"
+                    className="rounded-sm font-semibold tabular-nums text-foreground outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
                 >
                     {followersCount}
-                    <span className="text-gray-500 ml-1">Followers</span>
+                    <span className="ml-1 font-normal text-muted-foreground">Followers</span>
                 </button>
 
                 <button
+                    type="button"
                     onClick={() => setModalType("following")}
-                    className="font-medium text-gray-800"
+                    className="rounded-sm font-semibold tabular-nums text-foreground outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
                 >
                     {followingCount}
-                    <span className="text-gray-500 ml-1">Following</span>
+                    <span className="ml-1 font-normal text-muted-foreground">Following</span>
                 </button>
             </div>
 

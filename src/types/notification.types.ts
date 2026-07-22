@@ -21,6 +21,8 @@ export type NotificationType =
 
 
 export type NotificationData =
+  | { type: "USER_FOLLOWED"; userId: number }
+  | { type: "POLL_VOTED"; pollId: number }
   | { type: "POLL_REACTED"; pollId: number; vote: number; userId: number }
   | { type: "REASON_ADDED"; pollId: number; reasonId: number }
   | { type: "POLL_CREATED"; pollId: number }
@@ -32,7 +34,8 @@ export type Notification = {
     is_read: number;
     created_at: string;
     actor_username?: string;
+    reference_type: string;
+    reference_id: number;
+    related_poll_id?: number | null;
     data?: NotificationData;
 };
-
-

@@ -3,6 +3,8 @@
 import { createUserAction } from "@/actions/user.actions"
 import { ActionResponse } from "@/types/common.types";
 import { useEffect, useState, useTransition } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function UserForm() {
 
@@ -28,7 +30,7 @@ export default function UserForm() {
 
 
     return (
-        <div className="max-w-md w-full bg-white p-6 rounded-xl shadow-sm border">
+        <section className="w-full max-w-md rounded-xl bg-card p-6 ring-1 ring-foreground/10">
             <h1 className="text-xl font-semibold mb-4">Create User</h1>
 
             {actionResponse && (
@@ -43,30 +45,29 @@ export default function UserForm() {
             )}
 
             <form action={handleSubmit} className="space-y-4">
-                <input
+                <Input
                     type="text"
                     name="username"
                     placeholder="Username"
-                    className="w-full rounded-lg border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-
+                    required
                 />
 
-                <input
-                    type="text"
+                <Input
+                    type="password"
                     name="password"
                     placeholder="Password"
-                    className="w-full rounded-lg border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-
+                    required
                 />
 
-                <button
+                <Button
+                    type="submit"
                     disabled={isPending}
-                    className="w-full rounded-lg bg-blue-600 px-4 py-2 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full"
                 >
                     {isPending ? "Saving..." : "Save User"}
-                </button>
+                </Button>
             </form>
-        </div>
+        </section>
 
     )
 }

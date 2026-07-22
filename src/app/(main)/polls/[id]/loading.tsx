@@ -1,3 +1,5 @@
-export default function Loading(){
-    return <div>Loading...</div>;
+import { MainContentLoading } from "@/components/PageLoading";
+
+export default function Loading() {
+  return <MainContentLoading />;
 }

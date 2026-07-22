@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usePathname, useRouter } from "next/navigation";
 
 import {
   DropdownMenu,
@@ -14,92 +13,36 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-import { Home, Compass, Bell, SquarePlus, User, Search, LogOut } from "lucide-react";
+import { User, Search, LogOut } from "lucide-react";
 import Logout from "./Logout";
 
-import { useState } from "react";
-import {
-  fetchNotifications,
-  readNotification,
-} from "@/actions/notification.action";
-
-import { formatDistanceToNow } from "date-fns";
-import { Notification } from "@/types/notification.types";
-import { getNotificationMessage } from "@/lib/common.helper";
-import { AppButton } from "./AppButton";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { useAuthModal } from "@/hooks/useAuthModal";
 
 
 export default function Navbar({
-  isLoggedIn,
-  user,
-  unreadCount,
+  isLoggedIn = false,
+  user = null,
 }: {
-  isLoggedIn: boolean;
-  user: {
+  isLoggedIn?: boolean;
+  user?: {
     id: number;
     userName: string;
     name?: string | null;
     email?: string | null;
     image?: string | null;
   } | null;
-  unreadCount: number;
 }) {
-  const pathname = usePathname();
-  const router = useRouter();
-
-  const isActive = (path: string) => pathname === path;
-
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [count, setCount] = useState(unreadCount);
-  const [loaded, setLoaded] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  // Load only once
-  const loadNotifications = async () => {
-    if (loaded) return;
-
-    setLoading(true);
-
-    try {
-      const data = await fetchNotifications();
-      setNotifications(data || []);
-      setLoaded(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Click handler
-  const handleNotificationClick = (n: Notification) => {
-    if (!n.is_read) {
-      void readNotification(n.id);
-    }
-
-    if (n.type === "USER_FOLLOWED" && n.data?.userId) {
-      router.push(`/user/${n.data.userId}`);
-    }
-
-    if (
-      (n.type === "POLL_VOTED" || n.type === "REASON_ADDED") &&
-      n.data?.pollId
-    ) {
-      router.push(`/polls/${n.data.pollId}`);
-    }
-
-    if (n.type === "COMMENT_REACTED" && n.data?.pollId) {
-      router.push(`/polls/${n.data.pollId}`);
-    }
-  };
+  const { open } = useAuthModal();
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center px-4 md:px-8 gap-4">
 
         {/* LEFT */}
-        <div className="flex items-center gap-2 shrink-0 w-40">
-          <Link href="/">
-            <h1 className="text-xl font-semibold">Zaypoll</h1>
+        <div className="flex shrink-0 items-center gap-2 md:w-40">
+          <Link href="/" className="rounded-md focus-visible:ring-2 focus-visible:ring-ring">
+            <span className="text-xl font-semibold tracking-tight">Zaypoll</span>
           </Link>
 
           {/* <form action="/search" method="GET" className="hidden md:block w-64">
@@ -114,16 +57,18 @@ export default function Navbar({
 
 
         {/* Search (Center) */}
-        <div className="flex-1 flex justify-center">
+        <div className="hidden flex-1 justify-center sm:flex">
           <div className="relative w-full max-w-md">
             {/* <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search polls, topics, users..." className="pl-9 w-full" /> */}
             <form action="/search" method="GET">
+              <label htmlFor="global-search" className="sr-only">Search polls</label>
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                id="global-search"
                 name="q"
-                placeholder="Search"
-                className="pl-9 w-full"
+                placeholder="Search polls"
+                className="w-full rounded-full bg-muted/60 pl-9 shadow-none"
               />
             </form>
           </div>
@@ -131,81 +76,7 @@ export default function Navbar({
 
 
         {/* MIDDLE */}
-        <div className="flex items-center gap-2 shrink-0 justify-end w-40">
-
-          {/* NOTIFICATIONS */}
-          <DropdownMenu onOpenChange={(open) => open && loadNotifications()}>
-
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-
-                {/* BADGE */}
-                {count > 0 && (
-                  // <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1">
-                  //   {count}
-                  // </span>
-
-                  <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                  </span>
-
-
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-
-              {/* LOADING */}
-              {loading && (
-                <div className="p-3 text-sm text-muted-foreground">
-                  Loading...
-                </div>
-              )}
-
-              {/* EMPTY */}
-              {!loading && notifications.length === 0 && (
-                <div className="p-3 text-sm text-muted-foreground">
-                  No notifications
-                </div>
-              )}
-
-              {/* LIST */}
-
-              <div className="max-h-80 overflow-y-auto">
-                {notifications.map((n) => (
-                  <DropdownMenuItem key={n.id} onClick={() => handleNotificationClick(n)}
-                    className="flex flex-col items-start py-3 cursor-pointer">
-                    <div className="flex items-center gap-3 w-full">
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback>TC</AvatarFallback>
-                      </Avatar>
-
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Travel Community</p>
-                        <p className="text-xs text-muted-foreground">{getNotificationMessage(n)}</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(n.created_at), {
-                        addSuffix: true,
-                      })}</span>
-
-                    </div>
-
-
-                  </DropdownMenuItem>
-                ))}
-              </div>
-
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="justify-center text-primary cursor-pointer">
-                View all notifications
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="ml-auto flex shrink-0 items-center justify-end gap-2 md:w-40">
 
           {isLoggedIn && user && (
             <>
@@ -225,8 +96,8 @@ export default function Navbar({
                     {user.image ? (
 
                       <Avatar>
-                        <AvatarImage src={user.image} alt="@shadcn" />
-                        <AvatarFallback>AA</AvatarFallback>
+                        <AvatarImage src={user.image} alt={`${user.name || user.userName}'s profile`} />
+                        <AvatarFallback>{(user.name || user.userName).slice(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                     ) : (
                       <User className="w-6 h-6" />
@@ -255,6 +126,11 @@ export default function Navbar({
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
+          )}
+          {!isLoggedIn && (
+            <Button type="button" size="sm" onClick={open}>
+              Log in
+            </Button>
           )}
         </div>
 

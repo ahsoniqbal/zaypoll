@@ -26,7 +26,7 @@ export type PollListingDto = {
         id: number;
         name: string;
         userName: string;
-        image: string;
+        image: string | null;
         followersCount: number,
         followingCount: number,
         isFollowing: boolean;
@@ -56,7 +56,7 @@ export type PollDetailsDto = {
         id: number;
         name: string;
         userName: string;
-        image: string;
+        image: string | null;
         followersCount: number,
         followingCount: number,
         isFollowing: boolean;
@@ -88,9 +88,4 @@ export type CommentDto = {
         name: string;
         image: string | null
     };
-};
-
-type PollReasonsDto = {
-    allReasons: CommentDto[];
-    reasonsByOption: Record<number, CommentDto[]>;
 };

@@ -10,23 +10,27 @@ export default async function PollPage({ params }: { params: Promise<{ id: strin
     const session = await auth();
     const userId = session?.user?.id ?? null;
 
+    let poll;
+    let initialReasons;
+
     try {
         if (!id) throw new Error("Poll id is null");
 
-        const poll = await getPollById(userId, parseInt(id));
+        poll = await getPollById(userId, parseInt(id));
 
-        const initialReasons = await getPollReasons(
+        initialReasons = await getPollReasons(
             poll.pollId,
             userId,
             null,      // ALL reasons
             "top", 20);
 
-        return <PollDetails poll={poll} isUserLoggedIn={!!userId}  initialReasons={initialReasons} />;
     } catch (err) {
         if (err instanceof AppError) {
             notFound();
         }
         throw err;
     }
+
+    return <PollDetails poll={poll} isUserLoggedIn={!!userId} initialReasons={initialReasons} />;
 
 }

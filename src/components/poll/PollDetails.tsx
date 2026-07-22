@@ -11,11 +11,11 @@ type Props = {
 
 export default function PollDetails({ poll, isUserLoggedIn, initialReasons }: Props) {
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-2">
+    <main className="mx-auto max-w-3xl space-y-3 px-1 py-4 sm:px-4 sm:py-6">
       <BackButton />
 
       {/*Poll Section */}
       <DetailPollView poll={poll} isUserLoggedIn={isUserLoggedIn} initialReasons={initialReasons} />
-    </div>
+    </main>
   );
 }

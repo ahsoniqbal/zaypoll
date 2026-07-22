@@ -1,4 +1,5 @@
-import { UserDetails, UserStats } from "@/types/user.types";
+import Image from "next/image";
+import { UserDetails } from "@/types/user.types";
 import FollowButton from "../FollowButton";
 import FollowStats from "./FollowStats";
 import UserStatsSection from "./UserStatsSection";
@@ -19,44 +20,47 @@ export default function UserProfileHeader({
 
   return (
 
-    <div className="bg-white border rounded-2xl shadow-sm p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+    <section className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 sm:p-7">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
 
       {/* LEFT */}
-      <div className="flex items-start gap-5">
+      <div className="flex min-w-0 flex-1 items-start gap-4 sm:gap-5">
 
         {/* Avatar */}
-        <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 shadow ring-1 ring-gray-200">
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-muted ring-1 ring-foreground/10 sm:h-24 sm:w-24">
           {user.image ? (
-            <img src={user.image} className="w-full h-full object-cover" />
+            <Image
+              src={user.image}
+              alt={`${user.name}'s profile photo`}
+              fill
+              sizes="96px"
+              className="object-cover"
+            />
           ) : (
-            <div className="flex items-center justify-center w-full h-full text-xl font-semibold text-gray-600">
-              {user.name.charAt(0)}
+            <div className="flex h-full w-full items-center justify-center text-2xl font-medium text-muted-foreground">
+              {(user.name || user.userName).charAt(0).toUpperCase()}
             </div>
           )}
         </div>
 
         {/* Info */}
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
+        <div className="min-w-0 pt-0.5">
+          <h1 className="truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
             {user.name}
           </h1>
 
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="mt-0.5 truncate text-sm text-muted-foreground">
             @{user.userName}
           </p>
 
-          <p className="text-xs text-gray-400 mt-1">
-            Joined {new Date(user.joinedOn).toLocaleDateString()}
-          </p>
-
-          <div className="mt-3">
+          <div className="mt-4">
             <FollowStats
               userId={user.id}
               followersCount={user.followersCount}
               followingCount={user.followingCount}
             />
           </div>
-          <div className="mt-3 pt-3 border-t">
+          <div className="mt-4 border-t pt-4">
             <Suspense fallback={<StatsSkeleton />}>
               <UserStatsSection userId={user.id} />
             </Suspense>
@@ -68,7 +72,7 @@ export default function UserProfileHeader({
 
       {/* RIGHT */}
       {showFollowButton && (
-        <div className="self-start md:self-auto">
+        <div className="w-full sm:w-auto sm:self-start">
           <FollowButton
             userId={user.id}
             initialIsFollowing={user.isFollowing}
@@ -76,7 +80,15 @@ export default function UserProfileHeader({
           />
         </div>
       )}
-    </div>
+      </div>
+
+      <p className="mt-5 border-t pt-4 text-xs text-muted-foreground sm:ml-[7.25rem]">
+        Joined {new Date(user.joinedOn).toLocaleDateString("en", {
+          month: "long",
+          year: "numeric",
+        })}
+      </p>
+    </section>
   );
 
 }
@@ -85,11 +97,11 @@ export default function UserProfileHeader({
 
 function StatsSkeleton() {
   return (
-    <div className="flex gap-6 mt-4 text-sm animate-pulse">
+    <div className="flex gap-6 animate-pulse motion-reduce:animate-none">
       {[1, 2, 3].map((i) => (
         <div key={i}>
-          <div className="h-4 w-10 bg-gray-200 rounded mb-1"></div>
-          <div className="h-3 w-14 bg-gray-200 rounded"></div>
+          <div className="mb-1 h-4 w-10 rounded bg-muted" />
+          <div className="h-3 w-14 rounded bg-muted" />
         </div>
       ))}
     </div>

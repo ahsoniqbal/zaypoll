@@ -9,12 +9,12 @@ export default async function Users({ searchParams }: { searchParams: Promise<{ 
     const users: User[] = await getAllUsers(query);
     return (
 
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="mx-auto max-w-4xl grid gap-6 md:grid-cols-2">
+        <main className="min-h-screen bg-muted/30 p-4 sm:p-6">
+            <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
                 <UserList users={users} />
                 <UserForm />
             </div>
-        </div>
+        </main>
 
     )
 }

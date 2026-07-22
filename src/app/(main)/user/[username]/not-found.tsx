@@ -1,11 +1,5 @@
-import Link from 'next/link'
- 
+import { NotFoundState } from "@/components/PageMessage";
+
 export default function NotFound() {
-  return (
-    <div>
-      <h2>Not Found</h2>
-      <p>User not found!</p>
-      <Link href="/">Return Home</Link>
-    </div>
-  )
+  return <NotFoundState resource="User" />;
 }

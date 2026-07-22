@@ -69,26 +69,33 @@ export default function TopicSelector({
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium">Topics</p>
+      <div className="flex items-center justify-between gap-4">
+        <label htmlFor="topic-search" className="text-sm font-medium">
+          Topics <span className="font-normal text-muted-foreground">(optional)</span>
+        </label>
+        <span className="text-xs tabular-nums text-muted-foreground">
+          {selectedTopics.length}/{maxTopics}
+        </span>
+      </div>
 
       <div className="relative">
         {/* Input Container */}
         <div
-          className="flex flex-wrap gap-2 rounded-xl border border-gray-300
-          bg-gray-50 p-2 focus-within:border-black focus-within:ring-2
-          focus-within:ring-black/10"
+          className="flex flex-wrap gap-2 rounded-xl border bg-background p-2 transition focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/20"
           onClick={() => inputRef.current?.focus()}
         >
           {selectedTopicObjects.map((topic) => (
             <div
               key={topic.id}
-              className="flex items-center gap-1 rounded-full bg-black px-3 py-1 text-xs text-white"
+              className="flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground"
             >
               {topic.name}
 
               <button
                 type="button"
+                aria-label={`Remove ${topic.name}`}
                 onClick={() => removeTopic(topic.id)}
+                className="rounded-full outline-none hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <X size={12} />
               </button>
@@ -96,6 +103,7 @@ export default function TopicSelector({
           ))}
 
           <input
+            id="topic-search"
             ref={inputRef}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -105,7 +113,7 @@ export default function TopicSelector({
                 ? "Search topics..."
                 : ""
             }
-            className="flex-1 min-w-[120px] bg-transparent text-sm outline-none"
+            className="min-w-[120px] flex-1 bg-transparent px-1 text-sm outline-none"
           />
         </div>
 
@@ -113,7 +121,7 @@ export default function TopicSelector({
         {search.trim() && (
           <div
             className="absolute z-10 mt-2 w-full overflow-hidden rounded-xl
-            border bg-white shadow-lg"
+            border bg-popover shadow-lg"
           >
             {filteredTopics.length > 0 ? (
               filteredTopics.map((topic) => (
@@ -123,13 +131,13 @@ export default function TopicSelector({
                   type="button"
                   onClick={() => addTopic(topic.id)}
                   className="block w-full px-4 py-3 text-left text-sm
-                  hover:bg-gray-100"
+                  hover:bg-muted"
                 >
                   {topic.name}
                 </button>
               ))
             ) : (
-              <div className="px-4 py-3 text-sm text-gray-400">
+              <div className="px-4 py-3 text-sm text-muted-foreground">
                 No topics found
               </div>
             )}
@@ -137,9 +145,6 @@ export default function TopicSelector({
         )}
       </div>
 
-      <p className="text-xs text-gray-400">
-        {selectedTopics.length}/{maxTopics} topics selected
-      </p>
     </div>
   );
 }

@@ -1,6 +1,7 @@
-import { getPolls, searchPolls } from "@/services/poll.services";
+import { searchPolls } from "@/services/poll.services";
 import PollFeed from "@/components/poll/PollFeed";
 import { auth } from "@/auth";
+import { EmptyState } from "@/components/PageMessage";
 
 export default async function SearchPage({
     searchParams,
@@ -15,14 +16,12 @@ export default async function SearchPage({
     const session = await auth();
     const userId = session?.user?.id ?? null;
 
-    console.log("Search query:", query);
-
     // Handle empty search
     if (!query) {
         return (
-            <div className="max-w-4xl mx-auto px-4 py-6 text-center text-gray-500">
-                Start typing in the search box to find polls 🔍
-            </div>
+            <main className="mx-auto w-full max-w-3xl px-1 py-6 sm:px-4">
+              <EmptyState title="Search Zaypoll" description="Use the search field above to find polls and discussions." />
+            </main>
         );
     }
 
@@ -35,24 +34,16 @@ export default async function SearchPage({
 
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        <main className="mx-auto w-full max-w-3xl space-y-6 px-1 py-6 sm:px-4">
 
             {/* ✅ Search Title */}
-            <h1 className="text-xl font-semibold">
-                Results for <span className="text-blue-500">"{query}"</span>
+            <h1 className="text-xl font-semibold tracking-tight">
+                Results for <span className="text-muted-foreground">“{query}”</span>
             </h1>
 
             {/* ✅ No results */}
             {polls.data.length === 0 ? (
-                <div className="text-center py-10">
-                    <p className="text-gray-500 mb-2">
-                        No results found for "{query}"
-                    </p>
-
-                    <p className="text-sm text-gray-400">
-                        Try different keywords or remove filters
-                    </p>
-                </div>
+                <EmptyState title="No matching polls" description="Try a shorter or more general search term." actionHref="/explore" actionLabel="Explore topics" />
             ) : (
                 <PollFeed
                     polls={polls.data}
@@ -65,6 +56,6 @@ export default async function SearchPage({
                     query={{ q: query }} // ✅ keep search in pagination
                 />
             )}
-        </div>
+        </main>
     );
 }

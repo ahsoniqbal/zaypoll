@@ -5,13 +5,7 @@ import Link from "next/link";
 import { useEffect, useOptimistic, useState, useTransition } from "react";
 import { User } from "@/types/user.types";
 import { useRouter } from "next/navigation";
-
-type Post = {
-    id: number;
-    title: string;
-    likes: number;
-    likedByMe: boolean;
-}
+import { Button } from "@/components/ui/button";
 
 export default function UserList({ users }: { users: User[] }) {
     const router = useRouter();
@@ -45,7 +39,7 @@ export default function UserList({ users }: { users: User[] }) {
     return (
 
 
-        <div className="w-full bg-white p-6 rounded-xl shadow-sm border">
+        <section className="w-full rounded-xl bg-card p-6 ring-1 ring-foreground/10">
             <h1 className="text-xl font-semibold mb-4">Users</h1>
 
             {actionResponse && (
@@ -67,22 +61,24 @@ export default function UserList({ users }: { users: User[] }) {
                     >
                         <div className="text-sm">
                             <Link href={`/users/${u.id}`}><p className="font-medium">{u.userName}</p></Link>
-                            <p className="text-gray-500 text-xs">
+                            <p className="text-xs text-muted-foreground">
                                 {new Date(u.createdAt).toLocaleString()}
                             </p>
                         </div>
 
-                        <button
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
                             disabled={isPending}
                             onClick={() => handleDelete(u.id)}
-                            className="rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {isPending ? "Deleting..." : "Delete"}
-                        </button>
+                        </Button>
                     </div>
                 ))}
             </div>
-        </div>
+        </section>
 
     )
 }

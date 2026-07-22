@@ -8,18 +8,22 @@ import { useVote } from "@/hooks/useVote";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PollCommentButton from "./PollCommentButton";
-import ReasonSection from "./ReasonSection";
 import { AppButton } from "../AppButton";
 import { useAuthModal } from "@/hooks/useAuthModal";
+import type { AnalyticsTab, PollAnalytics } from "@/types/poll-analytics.types";
+import PollDetailTabs from "./PollDetailTabs";
 
 type Props = {
     poll: PollListingDto;
     isUserLoggedIn: boolean;
     isDetailView?: boolean;
     initialReasons: CommentDto[];
+    analytics?: PollAnalytics;
+    initialTab?: AnalyticsTab;
+    canRefreshInsights?: boolean;
 };
 
-export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, initialReasons }: Props) {
+export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, initialReasons, analytics, initialTab = "reasons", canRefreshInsights = false }: Props) {
     const { handleVote, isPending } = useVote(poll.pollId);
     const { open } = useAuthModal();
 
@@ -123,10 +127,11 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
                 </div>
 
             </div>
-            {isDetailView &&
-                <div className="mt-5">
-                    <hr className="my-4 border-gray-200" />
-                    <ReasonSection
+            {isDetailView && analytics &&
+                <PollDetailTabs
+                        initialTab={initialTab}
+                        analytics={analytics}
+                        canRefreshInsights={canRefreshInsights}
                         pollId={poll.pollId}
                         options={poll.options}
                         isUserLoggedIn={isUserLoggedIn}
@@ -139,7 +144,6 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
                         }}
                         initialReasons={initialReasons}
                     />
-                </div>
             }
         </article>
     );

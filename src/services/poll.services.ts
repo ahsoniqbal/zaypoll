@@ -6,6 +6,8 @@ import { DEFAULT_PAGE_LIMIT } from "@/types/constants";
 import { RowDataPacket } from "mysql2";
 import { ResultSetHeader } from "mysql2";
 import { createNotification } from "./notification.service";
+import { insertPollEvent } from "./poll-analytics.service";
+import type { AnalyticsEventContext } from "@/types/poll-analytics.types";
 
 type Vote = 1 | -1;
 
@@ -1263,7 +1265,7 @@ export async function createPoll(poll: CreatePollDto) {
     }
 }
 
-export async function addReason(userId: number, pollId: number, optionId: number, comment: string) {
+export async function addReason(userId: number, pollId: number, optionId: number, comment: string, analyticsContext?: AnalyticsEventContext) {
     const conn = await pool.getConnection();
 
     try {
@@ -1301,6 +1303,10 @@ export async function addReason(userId: number, pollId: number, optionId: number
             `INSERT INTO option_comments (option_id, user_id, comment) VALUES (?, ?, ?)`,
             [optionId, userId, trimmed]
         );
+
+        if (analyticsContext) {
+            await insertPollEvent(conn, { pollId, userId, eventType: "REASON_ADDED", optionId, context: analyticsContext });
+        }
 
 
         const [pollRows]: any = await conn.query(
@@ -1353,7 +1359,7 @@ export async function addReason(userId: number, pollId: number, optionId: number
     }
 }
 
-export async function castVote(userId: number, pollId: number, optionId: number) {
+export async function castVote(userId: number, pollId: number, optionId: number, analyticsContext?: AnalyticsEventContext) {
     //await delay();
     const conn = await pool.getConnection();
 
@@ -1383,6 +1389,10 @@ export async function castVote(userId: number, pollId: number, optionId: number)
             `UPDATE polls SET total_votes = total_votes + 1 WHERE id = ?`,
             [pollId]
         );
+
+        if (analyticsContext) {
+            await insertPollEvent(conn, { pollId, userId, eventType: "VOTE", optionId, context: analyticsContext });
+        }
 
         await conn.commit();
     } catch (err: any) {
@@ -1520,7 +1530,8 @@ export async function getCommentsByOptionId(
 export async function togglePollReaction(
     userId: number,
     pollId: number,
-    vote: Vote
+    vote: Vote,
+    analyticsContext?: AnalyticsEventContext,
 ) {
     validateVote(vote);
 
@@ -1563,6 +1574,10 @@ export async function togglePollReaction(
                 [pollId]
             );
 
+            if (analyticsContext) {
+                await insertPollEvent(conn, { pollId, userId, eventType: "REACTION", context: analyticsContext });
+            }
+
             await conn.commit();
 
             void createNotification({
@@ -1593,6 +1608,10 @@ export async function togglePollReaction(
                         : `UPDATE polls SET downvotes = GREATEST(downvotes - 1, 0) WHERE id = ?`,
                     [pollId]
                 );
+
+                if (analyticsContext) {
+                    await insertPollEvent(conn, { pollId, userId, eventType: "REACTION", context: analyticsContext });
+                }
 
                 await conn.commit();
 

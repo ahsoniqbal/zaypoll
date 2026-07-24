@@ -36,6 +36,7 @@ export async function getUserDetails(
             u.created_at as joined_on,
             u.followers_count,
             u.following_count,
+            u.age_group,
             uf.following_id as is_following
         from users u
         left join user_follows uf 
@@ -60,7 +61,8 @@ export async function getUserDetails(
         joinedOn: row.joined_on,
         followersCount: row.followers_count,
         followingCount: row.following_count,
-        isFollowing: Boolean(row.is_following)
+        isFollowing: Boolean(row.is_following),
+        ageGroup: row.age_group ?? null,
     };
 }
 

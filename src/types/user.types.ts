@@ -38,8 +38,11 @@ export type UserDetails = {
     followersCount: number;
     followingCount: number;
     isFollowing: boolean;
+    ageGroup: AgeGroup | null;
 
 }
+
+export type AgeGroup = "under_18" | "18_24" | "25_34" | "35_44" | "45_54" | "55_plus";
 
 export type UserStats = {
     totalPolls: number;

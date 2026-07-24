@@ -5,6 +5,8 @@ import { AppError } from "@/lib/error";
 import { createUser, deleteUser, toggleFollow, updateUser } from "@/services/user.services";
 import { ActionResponse } from "@/types/common.types";
 import { revalidatePath } from "next/cache";
+import pool from "@/lib/db";
+import type { AgeGroup } from "@/types/user.types";
 
 
 
@@ -148,4 +150,16 @@ export async function getFollowersAction(userId: number) {
 
 export async function getFollowingAction(userId: number) {
     return await getFollowing(userId);
+}
+
+const ageGroups = new Set<AgeGroup>(["under_18", "18_24", "25_34", "35_44", "45_54", "55_plus"]);
+
+export async function updateAgeGroupAction(ageGroup: AgeGroup | null): Promise<ActionResponse> {
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) return { success: false, message: "Unauthorized" };
+    if (ageGroup !== null && !ageGroups.has(ageGroup)) return { success: false, message: "Invalid age range" };
+    await pool.query("UPDATE users SET age_group = ? WHERE id = ?", [ageGroup, userId]);
+    revalidatePath("/user/[username]", "page");
+    return { success: true, message: ageGroup ? "Age range saved" : "Age range removed" };
 }

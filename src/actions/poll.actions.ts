@@ -5,7 +5,7 @@ import { CommentDto } from "@/dto/poll.dtos";
 import { AppError } from "@/lib/error";
 import { addReason, castVote, createPoll, getCommentsByOptionId, getPollReasons, toggleCommentReaction, togglePollReaction } from "@/services/poll.services";
 import { ActionResponse } from "@/types/common.types";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import {
     POLL_DESCRIPTION_MAX_LENGTH,
     POLL_MAX_OPTIONS,
@@ -14,6 +14,10 @@ import {
     POLL_OPTION_MAX_LENGTH,
     POLL_TITLE_MAX_LENGTH,
 } from "@/types/constants";
+import { getAnalyticsEventContext } from "@/lib/server/analytics-context";
+import { analyzeReason, generatePollInsights } from "@/services/gemini-poll-insights.service";
+import pool from "@/lib/db";
+import type { RowDataPacket } from "mysql2/promise";
 
 export async function createPollAction(
     formData: FormData
@@ -138,7 +142,12 @@ export async function addReasonAction(pollId: number, optionId: number, reason: 
         }
 
         // Call service
-        const insertedData = await addReason(userId, pollId, optionId, trimmed);
+        const insertedData = await addReason(userId, pollId, optionId, trimmed, await getAnalyticsEventContext());
+
+        void analyzeReason(insertedData.id)
+            .then(() => generatePollInsights(pollId))
+            .catch((analysisError) => console.error("Reason insight generation failed:", analysisError));
+        revalidateTag(`poll-analytics:${pollId}`, "max");
 
         //Revalidate only relevant page
         //revalidatePath(`/polls/${pollId}`);
@@ -178,7 +187,8 @@ export async function castVoteAction(pollId: number, optionId: number, isDetails
             throw new AppError("Please select option");
         }
 
-        await castVote(userId, pollId, optionId);
+        await castVote(userId, pollId, optionId, await getAnalyticsEventContext());
+        revalidateTag(`poll-analytics:${pollId}`, "max");
 
         // A vote changes the viewer-specific state on feeds, topic pages, profiles,
         // and the poll detail page. Invalidate the root layout so returning to any
@@ -228,7 +238,8 @@ export async function toggleReactionAction(
             throw new AppError("Invalid poll or vote value");
         }
 
-        await togglePollReaction(userId, pollId, vote);
+        await togglePollReaction(userId, pollId, vote, await getAnalyticsEventContext());
+        revalidateTag(`poll-analytics:${pollId}`, "max");
 
         // revalidatePath("/"); never use this in reactions as we follow fire-and-forget for better ui/ux
 
@@ -317,5 +328,31 @@ export async function getCommentsByOptionIdAction(optionId: number, sortBy: "lat
         console.error(error);
         throw new Error("Something went wrong");
 
+    }
+}
+
+export async function refreshPollInsightsAction(pollId: number): Promise<ActionResponse> {
+    try {
+        const session = await auth();
+        const userId = session?.user?.id;
+        if (!userId) throw new AppError("Please log in to refresh insights");
+        const [rows] = await pool.query<RowDataPacket[]>(
+            `SELECT p.created_by, i.updated_at FROM polls p LEFT JOIN poll_ai_insights i ON i.poll_id = p.id WHERE p.id = ? LIMIT 1`,
+            [pollId],
+        );
+        if (!rows.length) throw new AppError("Poll not found");
+        if (Number(rows[0].created_by) !== userId) throw new AppError("Only the poll owner can refresh insights");
+        if (rows[0].updated_at && Date.now() - new Date(rows[0].updated_at).getTime() < 10 * 60 * 1000) {
+            throw new AppError("Insights can be refreshed once every 10 minutes");
+        }
+        const generated = await generatePollInsights(pollId, true);
+        if (!generated) throw new AppError("This poll needs at least 10 votes and 5 meaningful reasons");
+        revalidatePath(`/polls/${pollId}`);
+        revalidateTag(`poll-analytics:${pollId}`, "max");
+        return { success: true, message: "AI insights refreshed" };
+    } catch (error) {
+        if (error instanceof AppError) return { success: false, message: error.message };
+        console.error("RefreshPollInsightsAction Error:", error);
+        return { success: false, message: "Unable to refresh AI insights" };
     }
 }

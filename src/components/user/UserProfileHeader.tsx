@@ -4,6 +4,7 @@ import FollowButton from "../FollowButton";
 import FollowStats from "./FollowStats";
 import UserStatsSection from "./UserStatsSection";
 import { Suspense } from "react";
+import AgeGroupSelector from "./AgeGroupSelector";
 
 type Props = {
   user: UserDetails;
@@ -88,6 +89,7 @@ export default function UserProfileHeader({
           year: "numeric",
         })}
       </p>
+      {isOwnProfile && <div className="sm:ml-[7.25rem]"><AgeGroupSelector initialValue={user.ageGroup} /></div>}
     </section>
   );
 

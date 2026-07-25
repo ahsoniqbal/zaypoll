@@ -30,8 +30,8 @@ export async function getParentTopics(): Promise<TopicDto[]> {
     FROM topics t
     LEFT JOIN topics child ON child.parent_id = t.id AND child.is_active = 1
     WHERE t.parent_id IS NULL AND t.is_active = 1
-    GROUP BY t.id, t.name, t.slug, t.icon_url, t.parent_id, t.is_trending
-    ORDER BY t.is_trending DESC, t.name ASC
+    GROUP BY t.id, t.name, t.slug, t.icon_url, t.parent_id, t.sort_order
+    ORDER BY t.sort_order ASC, t.name ASC
   `);
 
   return rows.map(toTopic);
@@ -44,7 +44,7 @@ export async function getSearchableTopics(): Promise<TopicDto[]> {
     FROM topics t
     LEFT JOIN topics parent ON parent.id = t.parent_id
     WHERE t.is_active = 1
-    ORDER BY t.name ASC
+    ORDER BY t.sort_order ASC, t.name ASC
   `);
 
   return rows.map(toTopic);
@@ -79,7 +79,7 @@ export async function getSubTopics(parentId: number): Promise<TopicDto[]> {
     SELECT id, name, slug, icon_url, parent_id
     FROM topics
     WHERE parent_id = ? AND is_active = 1
-    ORDER BY name ASC
+    ORDER BY sort_order ASC, name ASC
   `, [parentId]);
 
   return rows.map(toTopic);

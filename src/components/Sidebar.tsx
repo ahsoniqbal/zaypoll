@@ -193,11 +193,9 @@ export default function Sidebar({
             {/* Create Poll */}
             <AppButton
               onClick={handleCreatePollClick}
-              className="mt-3 w-full gap-2"
-              size="sm"
-            >
-              <PlusCircle size={16} />
-              Create Poll
+              className="mt-3 w-full gap-2">
+              <PlusCircle size={18} />
+              Create
             </AppButton>
           </CardContent>
         </Card>

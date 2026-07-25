@@ -41,12 +41,14 @@ export default function PollFeed({
         />
       ))}
 
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        basePath={basePath}
-        query={query}
-      />
+      {totalPages > 1 && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          basePath={basePath}
+          query={query}
+        />
+      )}
     </div>
   );
 }

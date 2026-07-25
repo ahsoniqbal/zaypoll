@@ -50,21 +50,21 @@ export default async function TopicPage({ params, searchParams }: Props) {
         <span>/</span><span className="text-foreground">{topic.name}</span>
       </nav>
 
-      <header>
+      {/* <header>
         <p className="text-sm font-medium text-primary">Topic</p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">{topic.name}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {isParentTopic ? `All discussion in ${topic.name} and its sub-topics.` : `Polls tagged ${topic.name}.`}
         </p>
-      </header>
+      </header> */}
 
       <SubtopicChips parentTopic={parentTopic} subTopics={subTopics} activeTopicId={topic.id} />
 
       <section aria-labelledby="topic-feed-heading" className="space-y-4">
-        <div>
+        {/* <div>
           <h2 id="topic-feed-heading" className="text-xl font-semibold">Latest polls</h2>
           <p className="mt-1 text-sm text-muted-foreground">Vote, react, and add your perspective.</p>
-        </div>
+        </div> */}
         <PollFeed
           polls={polls.data}
           page={polls.page}

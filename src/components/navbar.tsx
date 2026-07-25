@@ -1,8 +1,8 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 import {
   DropdownMenu,
@@ -13,12 +13,13 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-import { User, Search, LogOut } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import Logout from "./Logout";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { getInitials } from "@/lib/utils";
+import NavbarSearch from "@/components/search/NavbarSearch";
 
 
 export default function Navbar({
@@ -45,33 +46,16 @@ export default function Navbar({
           <Link href="/" className="rounded-md focus-visible:ring-2 focus-visible:ring-ring">
             <span className="text-xl font-semibold tracking-tight">Zay<span className="text-primary">poll</span></span>
           </Link>
-
-          {/* <form action="/search" method="GET" className="hidden md:block w-64">
-            <Input
-              name="q"
-              placeholder="Search"
-              className="bg-muted border-none focus-visible:ring-0"
-            />
-          </form> */}
         </div>
 
-
-
         {/* Search (Center) */}
-        <div className="hidden flex-1 justify-center sm:flex">
-          <div className="relative w-full max-w-md">
-            {/* <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search polls, topics, users..." className="pl-9 w-full" /> */}
-            <form action="/search" method="GET">
-              <label htmlFor="global-search" className="sr-only">Search polls</label>
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="global-search"
-                name="q"
-                placeholder="Search polls"
-                className="w-full rounded-full bg-muted/60 pl-9 shadow-none"
-              />
-            </form>
+        <div className="min-w-0 flex-1 sm:flex sm:justify-center">
+          <div className="w-full max-w-md">
+            <Suspense
+              fallback={<div aria-hidden="true" className="h-9 w-full rounded-full bg-muted/60" />}
+            >
+              <NavbarSearch />
+            </Suspense>
           </div>
         </div>
 

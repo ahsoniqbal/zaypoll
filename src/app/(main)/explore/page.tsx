@@ -34,9 +34,9 @@ export default async function ExplorePage() {
             Trending Polls
           </h2>
 
-          <p className="text-sm text-muted-foreground mt-1">
+          {/* <p className="text-sm text-muted-foreground mt-1">
             Most active discussions right now
-          </p>
+          </p> */}
         </div>
 
         <div className="grid grid-cols-1 gap-4">

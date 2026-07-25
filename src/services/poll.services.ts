@@ -756,10 +756,14 @@ export async function searchPolls(
     limit: number = DEFAULT_PAGE_LIMIT
 ): Promise<PagedResponse<PollListingDto>> {
 
-    page = Math.max(1, page);
-    limit = Math.min(50, limit);
+    page = Number.isInteger(page) && page > 0 ? page : 1;
+    limit = Number.isInteger(limit) ? Math.min(50, Math.max(1, limit)) : DEFAULT_PAGE_LIMIT;
 
     const offset = (page - 1) * limit;
+    const normalizedSearch = search.trim().replace(/\s+/g, " ").slice(0, 100);
+    const escapedSearch = normalizedSearch.replace(/[\\%_]/g, "\\$&");
+    const prefixSearch = `${escapedSearch}%`;
+    const containsSearch = `%${escapedSearch}%`;
 
     // =========================
     // BASE QUERY (WITH RANKING)
@@ -771,29 +775,27 @@ export async function searchPolls(
             MATCH(p.title, p.content)
             AGAINST (? IN NATURAL LANGUAGE MODE) AS relevance,
 
-            (p.total_votes * 0.5) AS vote_score,
-
-            ((p.upvotes - p.downvotes) * 2) AS quality_score,
-
-            (1 / (TIMESTAMPDIFF(HOUR, p.created_at, NOW()) + 2)) * 50 AS freshness_score,
-
             (
-                MATCH(p.title, p.content)
-                AGAINST (? IN NATURAL LANGUAGE MODE) * 3
-                +
-                (p.total_votes * 0.5)
-                +
-                ((p.upvotes - p.downvotes) * 2)
-                +
-                (1 / (TIMESTAMPDIFF(HOUR, p.created_at, NOW()) + 2)) * 50
+                CASE
+                    WHEN LOWER(p.title) = LOWER(?) THEN 100
+                    WHEN p.title LIKE ? THEN 50
+                    WHEN p.title LIKE ? THEN 25
+                    ELSE 0
+                END
+                + MATCH(p.title, p.content)
+                    AGAINST (? IN NATURAL LANGUAGE MODE) * 10
+                + LEAST(p.total_votes, 1000) * 0.01
+                + GREATEST(-20, LEAST(20, p.upvotes - p.downvotes)) * 0.1
+                + (1 / (GREATEST(0, TIMESTAMPDIFF(HOUR, p.created_at, NOW())) + 24)) * 10
             ) AS score
 
         FROM polls p
 
-        WHERE MATCH(p.title, p.content)
-        AGAINST (? IN NATURAL LANGUAGE MODE)
+        WHERE MATCH(p.title, p.content) AGAINST (? IN NATURAL LANGUAGE MODE)
+           OR p.title LIKE ?
+           OR p.content LIKE ?
 
-        ORDER BY score DESC
+        ORDER BY score DESC, p.created_at DESC, p.id DESC
         LIMIT ? OFFSET ?
     `;
 
@@ -852,6 +854,8 @@ export async function searchPolls(
             AND uf.follower_id = ?
         LEFT JOIN option_comments oc
             ON oc.option_id = pv.option_id AND oc.user_id = pv.user_id
+
+        ORDER BY p.score DESC, p.created_at DESC, p.id DESC, po.display_order ASC, po.id ASC
     `;
 
     // =========================
@@ -860,8 +864,9 @@ export async function searchPolls(
     const countSql = `
         SELECT COUNT(*) AS total
         FROM polls p
-        WHERE MATCH(p.title, p.content)
-        AGAINST (? IN NATURAL LANGUAGE MODE)
+        WHERE MATCH(p.title, p.content) AGAINST (? IN NATURAL LANGUAGE MODE)
+           OR p.title LIKE ?
+           OR p.content LIKE ?
     `;
 
     // =========================
@@ -871,9 +876,14 @@ export async function searchPolls(
         pool.query(
             dataSql,
             [
-                search, // relevance
-                search, // score calc
-                search, // WHERE clause
+                normalizedSearch, // relevance
+                normalizedSearch, // exact title
+                prefixSearch,
+                containsSearch,
+                normalizedSearch, // score relevance
+                normalizedSearch, // WHERE relevance
+                containsSearch,
+                containsSearch,
                 limit,
                 offset,
                 userId,
@@ -881,7 +891,7 @@ export async function searchPolls(
                 userId
             ]
         ),
-        pool.query(countSql, [search]),
+        pool.query(countSql, [normalizedSearch, containsSearch, containsSearch]),
     ]);
 
     const total = countResult[0].total;

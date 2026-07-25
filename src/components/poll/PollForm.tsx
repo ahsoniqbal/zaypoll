@@ -14,6 +14,7 @@ import {
   POLL_MAX_OPTIONS,
   POLL_MAX_TOPICS,
   POLL_MIN_OPTIONS,
+  POLL_MIN_TOPICS,
   POLL_OPTION_MAX_LENGTH,
   POLL_TITLE_MAX_LENGTH,
 } from "@/types/constants";
@@ -66,6 +67,16 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
       return;
     }
 
+    if (selectedTopics.length < POLL_MIN_TOPICS) {
+      toast.error("Select at least one topic");
+      return;
+    }
+
+    if (selectedTopics.length > POLL_MAX_TOPICS) {
+      toast.error(`You can select up to ${POLL_MAX_TOPICS} topics`);
+      return;
+    }
+
     normalizedOptions.forEach((opt, index) => {
       formData.append(`options[${index}]`, opt);
     });
@@ -92,33 +103,17 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
     <div className="w-full">
       <div className="surface-card space-y-6 p-5 sm:p-6">
 
-        {/* Header */}
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Create poll</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Ask a question and let others vote
-          </p>
-        </div>
-
         <form action={handleSubmit} className="space-y-5">
 
           {/* Title */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-4">
-              <label htmlFor="poll-title" className="text-sm font-medium">
-                Question <span className="text-destructive">*</span>
-              </label>
-              <span className="text-xs tabular-nums text-muted-foreground">
-                {title.length}/{POLL_TITLE_MAX_LENGTH}
-              </span>
-            </div>
             <input
               id="poll-title"
               type="text"
               name="title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder="What would you like to ask?"
+              placeholder="Title your poll"
               required
               maxLength={POLL_TITLE_MAX_LENGTH}
               className="w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20"
@@ -127,20 +122,12 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
 
           {/* Description */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-4">
-              <label htmlFor="poll-description" className="text-sm font-medium">
-                Description <span className="font-normal text-muted-foreground">(optional)</span>
-              </label>
-              <span className="text-xs tabular-nums text-muted-foreground">
-                {description.length}/{POLL_DESCRIPTION_MAX_LENGTH}
-              </span>
-            </div>
             <textarea
               id="poll-description"
               name="content"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="Add context to help people make an informed choice"
+              placeholder="Body text (optional)"
               rows={4}
               maxLength={POLL_DESCRIPTION_MAX_LENGTH}
               className="w-full resize-none rounded-xl border bg-background px-4 py-3 text-sm outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20"
@@ -149,15 +136,6 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
 
           {/* OPTIONS */}
           <div className="space-y-3">
-            <div>
-              <div>
-                <p className="text-sm font-medium">Options <span className="text-destructive">*</span></p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {POLL_MIN_OPTIONS}–{POLL_MAX_OPTIONS} unique choices, up to {POLL_OPTION_MAX_LENGTH} characters each
-                </p>
-              </div>
-
-            </div>
 
             {options.map((opt, index) => (
               <div key={index} className="flex gap-2 items-center">
@@ -209,13 +187,6 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
 
           {/* Submit */}
           <div className="flex justify-end pt-2">
-            {/* <Button
-              type="submit"
-              disabled={isPending}
-              className="rounded-full px-6"
-            >
-              {isPending ? "Publishing..." : "Create Poll"}
-            </Button> */}
 
             <AppButton
               type="submit"

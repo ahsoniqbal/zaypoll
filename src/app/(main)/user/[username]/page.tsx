@@ -10,12 +10,12 @@ export default async function UserPage({
     searchParams,
 }: {
     params: Promise<{ username: string }>;
-    searchParams: { page?: string };
+    searchParams: Promise<{ page?: string }>;
 }) {
     const session = await auth();
     const loggedInUserId = session?.user?.id ?? null;
 
-    const { username } = await params;
+    const [{ username }, resolvedSearchParams] = await Promise.all([params, searchParams]);
 
     const user = await getUserDetails(username, loggedInUserId);
 
@@ -37,7 +37,7 @@ export default async function UserPage({
                 <UserContentSections
                     userId={user.id}
                     username={username}
-                    searchParams={searchParams}
+                    searchParams={resolvedSearchParams}
                 />
         </main>
     );

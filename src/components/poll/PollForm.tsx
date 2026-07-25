@@ -149,35 +149,13 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
 
           {/* OPTIONS */}
           <div className="space-y-3">
-            <div className="flex items-start justify-between gap-4">
+            <div>
               <div>
                 <p className="text-sm font-medium">Options <span className="text-destructive">*</span></p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   {POLL_MIN_OPTIONS}–{POLL_MAX_OPTIONS} unique choices, up to {POLL_OPTION_MAX_LENGTH} characters each
                 </p>
               </div>
-
-              {/* <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addOption}
-                disabled={options.length >= POLL_MAX_OPTIONS}
-                className="rounded-full px-3"
-              >
-                <SquarePlus className="w-4 h-4 mr-1" />
-                Add
-              </Button> */}
-
-              <AppButton
-                variant="outline"
-                size="sm"
-                icon={<SquarePlus />}
-                onClick={addOption}
-                disabled={options.length >= 6}
-              >
-                Add
-              </AppButton>
 
             </div>
 
@@ -207,6 +185,18 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
                 )}
               </div>
             ))}
+
+            <div className="flex justify-end pt-1">
+              <AppButton
+                variant="outline"
+                size="sm"
+                icon={<SquarePlus />}
+                onClick={addOption}
+                disabled={options.length >= POLL_MAX_OPTIONS}
+              >
+                Add option
+              </AppButton>
+            </div>
           </div>
 
           {/* Topics (FINAL VERSION) */}

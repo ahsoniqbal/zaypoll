@@ -8,6 +8,7 @@ import {
     getFollowersAction,
     getFollowingAction,
 } from "@/actions/user.actions";
+import { getInitials } from "@/lib/utils";
 
 type User = {
     id: number;
@@ -127,7 +128,7 @@ export default function FollowModal({
                                         <Image src={u.image} alt="" fill sizes="40px" className="object-cover" />
                                     ) : (
                                       <span className="flex h-full w-full items-center justify-center text-sm font-medium text-muted-foreground">
-                                        {(u.name || u.user_name).charAt(0).toUpperCase()}
+                                        {getInitials(u.name, u.user_name)}
                                       </span>
                                     )}
                                 </div>

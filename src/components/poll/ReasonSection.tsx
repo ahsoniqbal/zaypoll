@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import CommentReactions from "./CommentReactions";
 import { format } from "date-fns";
 import ReasonComposer from "./ReasonComposer";
+import { getInitials } from "@/lib/utils";
 
 type Props = {
   pollId: number;
@@ -181,7 +182,7 @@ export default function ReasonSection({
             <Avatar>
               {comment.user.image && <AvatarImage src={comment.user.image} alt={`${comment.user.name}'s profile`} />}
               <AvatarFallback>
-                {comment.user.name.slice(0, 2).toUpperCase()}
+                {getInitials(comment.user.name)}
               </AvatarFallback>
             </Avatar>
 

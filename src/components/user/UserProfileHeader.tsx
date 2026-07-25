@@ -4,7 +4,8 @@ import FollowButton from "../FollowButton";
 import FollowStats from "./FollowStats";
 import UserStatsSection from "./UserStatsSection";
 import { Suspense } from "react";
-import AgeGroupSelector from "./AgeGroupSelector";
+import EditProfileModal from "./EditProfileModal";
+import { getInitials } from "@/lib/utils";
 
 type Props = {
   user: UserDetails;
@@ -39,7 +40,7 @@ export default function UserProfileHeader({
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-2xl font-medium text-muted-foreground">
-              {(user.name || user.userName).charAt(0).toUpperCase()}
+              {getInitials(user.name, user.userName)}
             </div>
           )}
         </div>
@@ -61,18 +62,23 @@ export default function UserProfileHeader({
               followingCount={user.followingCount}
             />
           </div>
-          <div className="mt-4 border-t pt-4">
+          {/* <div className="mt-4 border-t pt-4">
             <Suspense fallback={<StatsSkeleton />}>
               <UserStatsSection userId={user.id} />
             </Suspense>
-          </div>
+          </div> */}
         </div>
-
-
       </div>
 
       {/* RIGHT */}
-      {showFollowButton && (
+      {isOwnProfile ? (
+        <div className="w-full sm:w-auto sm:self-start">
+          <EditProfileModal
+            initialName={user.name}
+            initialAgeGroup={user.ageGroup}
+          />
+        </div>
+      ) : showFollowButton && (
         <div className="w-full sm:w-auto sm:self-start">
           <FollowButton
             userId={user.id}
@@ -83,13 +89,12 @@ export default function UserProfileHeader({
       )}
       </div>
 
-      <p className="mt-5 border-t pt-4 text-xs text-muted-foreground sm:ml-[7.25rem]">
+      <p className="mt-2 pt-2 text-xs text-muted-foreground sm:ml-[7.25rem]">
         Joined {new Date(user.joinedOn).toLocaleDateString("en", {
           month: "long",
           year: "numeric",
         })}
       </p>
-      {isOwnProfile && <div className="sm:ml-[7.25rem]"><AgeGroupSelector initialValue={user.ageGroup} /></div>}
     </section>
   );
 

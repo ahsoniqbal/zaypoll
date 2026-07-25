@@ -16,7 +16,7 @@ export default async function MainLayout({
   const unreadCount = await fetchUnreadCount();
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/30">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <Navbar isLoggedIn={isLoggedIn} user={user} />
 
 

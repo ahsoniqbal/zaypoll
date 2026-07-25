@@ -18,6 +18,7 @@ import Logout from "./Logout";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useAuthModal } from "@/hooks/useAuthModal";
+import { getInitials } from "@/lib/utils";
 
 
 export default function Navbar({
@@ -93,15 +94,12 @@ export default function Navbar({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
-                    {user.image ? (
-
-                      <Avatar>
+                    <Avatar>
+                      {user.image && (
                         <AvatarImage src={user.image} alt={`${user.name || user.userName}'s profile`} />
-                        <AvatarFallback>{(user.name || user.userName).slice(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                    ) : (
-                      <User className="w-6 h-6" />
-                    )}
+                      )}
+                      <AvatarFallback>{getInitials(user.name, user.userName)}</AvatarFallback>
+                    </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
 

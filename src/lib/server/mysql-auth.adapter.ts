@@ -71,7 +71,7 @@ export function MySqlAuthAdapter(): Adapter {
       const [result] = await pool.execute<ResultSetHeader>(
         `INSERT INTO users (name, email, email_verified, image, user_name)
          VALUES (?, ?, ?, ?, ?)`,
-        [name, user.email, user.emailVerified ?? null, user.image ?? null, userName],
+        [name, user.email, user.emailVerified ?? null, null, userName],
       );
 
       return {
@@ -79,7 +79,7 @@ export function MySqlAuthAdapter(): Adapter {
         id: String(result.insertId),
         name,
         emailVerified: user.emailVerified ?? null,
-        image: user.image ?? null,
+        image: null,
         userName,
       } as AdapterUser;
     },
@@ -112,12 +112,12 @@ export function MySqlAuthAdapter(): Adapter {
       const current = await findUserById(user.id);
       if (!current) throw new Error("Cannot update a user that does not exist");
 
-      const next = { ...current, ...user };
+      const next = { ...current, ...user, image: current.image };
       await pool.execute(
         `UPDATE users
-         SET name = ?, email = ?, email_verified = ?, image = ?
+         SET name = ?, email = ?, email_verified = ?
          WHERE id = ?`,
-        [next.name ?? "User", next.email, next.emailVerified ?? null, next.image ?? null, user.id],
+        [next.name ?? "User", next.email, next.emailVerified ?? null, user.id],
       );
       return next as AdapterUser;
     },

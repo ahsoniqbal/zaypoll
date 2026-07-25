@@ -2,10 +2,9 @@
 
 import { auth } from "@/auth";
 import { AppError } from "@/lib/error";
-import { createUser, deleteUser, toggleFollow, updateUser } from "@/services/user.services";
+import { createUser, deleteUser, toggleFollow, updateUser, updateUserProfile } from "@/services/user.services";
 import { ActionResponse } from "@/types/common.types";
 import { revalidatePath } from "next/cache";
-import pool from "@/lib/db";
 import type { AgeGroup } from "@/types/user.types";
 
 
@@ -154,12 +153,35 @@ export async function getFollowingAction(userId: number) {
 
 const ageGroups = new Set<AgeGroup>(["under_18", "18_24", "25_34", "35_44", "45_54", "55_plus"]);
 
-export async function updateAgeGroupAction(ageGroup: AgeGroup | null): Promise<ActionResponse> {
+export async function updateProfileAction(formData: FormData): Promise<ActionResponse> {
     const session = await auth();
     const userId = session?.user?.id;
-    if (!userId) return { success: false, message: "Unauthorized" };
-    if (ageGroup !== null && !ageGroups.has(ageGroup)) return { success: false, message: "Invalid age range" };
-    await pool.query("UPDATE users SET age_group = ? WHERE id = ?", [ageGroup, userId]);
-    revalidatePath("/user/[username]", "page");
-    return { success: true, message: ageGroup ? "Age range saved" : "Age range removed" };
+
+    if (!userId) {
+        return { success: false, message: "Please sign in to update your profile" };
+    }
+
+    const name = String(formData.get("name") ?? "").trim();
+    const ageGroupValue = String(formData.get("ageGroup") ?? "").trim();
+    const ageGroup = ageGroupValue ? ageGroupValue as AgeGroup : null;
+
+    if (name.length < 2 || name.length > 100) {
+        return { success: false, message: "Name must be between 2 and 100 characters" };
+    }
+
+    if (ageGroup !== null && !ageGroups.has(ageGroup)) {
+        return { success: false, message: "Select a valid age range" };
+    }
+
+    try {
+        await updateUserProfile(Number(userId), {
+            name,
+            ageGroup,
+        });
+        revalidatePath("/user/[username]", "page");
+        return { success: true, message: "Profile updated successfully" };
+    } catch (error) {
+        console.error("updateProfileAction error:", error);
+        return { success: false, message: "We couldn't update your profile. Please try again." };
+    }
 }

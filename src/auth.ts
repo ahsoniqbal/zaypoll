@@ -48,6 +48,9 @@ export const { handlers: { GET, POST }, auth, signIn, signOut, } = NextAuth({
                     const appUser = session.user as unknown as { id: number; userName: string };
                     appUser.id = Number(token.userId);
                     appUser.userName = String(token.userName ?? "");
+                    if (session.user.image?.startsWith("https://lh3.googleusercontent.com/")) {
+                        session.user.image = null;
+                    }
                 }
 
                 return session;

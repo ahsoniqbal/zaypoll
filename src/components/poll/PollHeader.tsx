@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { formatDistanceToNow } from "date-fns";
+import { getInitials } from "@/lib/utils";
 
 type Props = {
     username: string;
@@ -18,7 +19,7 @@ export default function PollHeader({ username, name, image, createdAt }: Props) 
             <Link href={`/user/${username}`}>
                 <Avatar>
                     {image && <AvatarImage src={image} alt={`${name}'s profile`} />}
-                    <AvatarFallback>  <span>{name.slice(0, 2).toUpperCase()}</span></AvatarFallback>
+                    <AvatarFallback>{getInitials(name, username)}</AvatarFallback>
                 </Avatar>
             </Link>
             <div className="min-w-0 leading-5">

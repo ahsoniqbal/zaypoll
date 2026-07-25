@@ -4,7 +4,7 @@ import pool from "@/lib/db";
 import { AppError } from "@/lib/error";
 import { PagedResponse } from "@/types/common.types";
 import { DEFAULT_PAGE_LIMIT } from "@/types/constants";
-import { User, UserDetails, UserRow } from "@/types/user.types";
+import { AgeGroup, User, UserDetails, UserRow } from "@/types/user.types";
 import { ResultSetHeader } from "mysql2";
 import { UserData } from "next-auth/providers/42-school";
 import { createNotification } from "./notification.service";
@@ -64,6 +64,22 @@ export async function getUserDetails(
         isFollowing: Boolean(row.is_following),
         ageGroup: row.age_group ?? null,
     };
+}
+
+export async function updateUserProfile(
+    userId: number,
+    profile: { name: string; ageGroup: AgeGroup | null }
+): Promise<void> {
+    const [result] = await pool.execute<ResultSetHeader>(
+        `UPDATE users
+         SET name = ?, age_group = ?
+         WHERE id = ?`,
+        [profile.name, profile.ageGroup, userId]
+    );
+
+    if (result.affectedRows === 0) {
+        throw new AppError("User not found", 404);
+    }
 }
 
 export async function registerUser(user: CreateUserDto): Promise<User> {

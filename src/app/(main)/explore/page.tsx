@@ -23,7 +23,7 @@ export default async function ExplorePage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-5xl space-y-10 px-1 py-6 sm:px-4 sm:py-8">
+    <main className="content-shell space-y-8">
 
       <ExploreTopics parentTopics={parentTopics} searchableTopics={searchableTopics} />
 
@@ -39,7 +39,7 @@ export default async function ExplorePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4">
           {trendingPolls.map((poll) => (
             <PollCard
               key={poll.pollId}

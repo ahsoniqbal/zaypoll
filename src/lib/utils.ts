@@ -16,3 +16,12 @@ export function getInitials(name?: string | null, username?: string | null) {
     return parts[0].slice(0, 2).toUpperCase();
 }
 
+const compactNumberFormatter = new Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+});
+
+export function formatCompactNumber(value: number) {
+    return compactNumberFormatter.format(value);
+}
+

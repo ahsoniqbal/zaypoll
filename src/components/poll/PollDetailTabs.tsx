@@ -40,7 +40,7 @@ export default function PollDetailTabs(props: Props) {
     window.history.pushState({}, "", url);
   };
   return <Tabs value={tab} onValueChange={changeTab} className="mt-5">
-    <TabsList variant="line" className="sticky top-14 z-10 w-full justify-start border-b bg-card/95 backdrop-blur sm:static sm:bg-transparent">
+    <TabsList variant="line" className="sticky top-16 z-10 w-full justify-start border-b bg-card/95 backdrop-blur sm:static sm:bg-transparent">
       <TabsTrigger value="reasons" className="px-4 py-2">Reasons</TabsTrigger>
       <TabsTrigger value="analytics" className="px-4 py-2">Analytics</TabsTrigger>
     </TabsList>

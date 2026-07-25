@@ -26,7 +26,7 @@ export default async function UserPage({
     const isOwnProfile = loggedInUserId === user.id;
 
     return (
-        <main className="mx-auto w-full max-w-3xl space-y-8 px-1 py-4 sm:px-4 sm:py-8">
+        <main className="content-shell space-y-6">
 
                 <UserProfileHeader
                     user={user}

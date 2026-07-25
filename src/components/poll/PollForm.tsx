@@ -90,7 +90,7 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
 
   return (
     <div className="w-full">
-      <div className="space-y-6 rounded-2xl bg-card p-5 ring-1 ring-foreground/10 sm:p-6">
+      <div className="surface-card space-y-6 p-5 sm:p-6">
 
         {/* Header */}
         <div>

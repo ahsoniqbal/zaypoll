@@ -4,6 +4,7 @@ import { toggleCommentReactionAction } from "@/actions/poll.actions";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { ArrowBigDown, ArrowBigUp } from "lucide-react";
 import { useState, useTransition } from "react";
+import { formatCompactNumber } from "@/lib/utils";
 
 type Props = {
     commentId: number;
@@ -86,15 +87,19 @@ export default function CommentReactions({
                 aria-pressed={state.reaction === 1}
                 className={`flex items-center justify-center h-7 w-7 rounded-full transition-all
                 ${state.reaction === 1
-                        ? "text-orange-600"
-                        : "text-muted-foreground hover:bg-muted hover:text-orange-500"}
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-muted hover:text-primary"}
                     active:scale-90`}>
                 <ArrowBigUp className="w-5 h-5" />
             </button>
 
             {/* ✅ Score */}
-            <span className="min-w-4 text-center text-xs font-medium tabular-nums text-muted-foreground">
-                {state.upvotes - state.downvotes}
+            <span
+                className="min-w-4 text-center text-xs font-medium tabular-nums text-muted-foreground"
+                title={(state.upvotes - state.downvotes).toLocaleString()}
+                aria-label={`${state.upvotes - state.downvotes} net votes`}
+            >
+                {formatCompactNumber(state.upvotes - state.downvotes)}
             </span>
 
             {/* ✅ Downvote */}
@@ -103,8 +108,8 @@ export default function CommentReactions({
                 aria-pressed={state.reaction === -1}
                 className={`flex items-center justify-center h-7 w-7 rounded-full transition-all
                 ${state.reaction === -1
-                        ? "text-blue-600"
-                        : "text-muted-foreground hover:bg-muted hover:text-blue-500"}
+                        ? "bg-muted text-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"}
                     active:scale-90`}>
                 <ArrowBigDown className="w-5 h-5" />
             </button>

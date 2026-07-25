@@ -43,7 +43,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
   const polls = await getPolls(user?.id ?? null, page, DEFAULT_PAGE_LIMIT, "for_you", topicIds, "latest");
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:py-8">
+    <main className="content-shell space-y-6">
       <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-muted-foreground">
         <Link href="/explore" className="hover:text-foreground">Explore</Link>
         {topic.parentName && <><span>/</span><Link href={`/topics/${parentTopic.slug}`} className="hover:text-foreground">{parentTopic.name}</Link></>}

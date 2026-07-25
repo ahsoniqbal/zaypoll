@@ -16,14 +16,13 @@ export default async function MainLayout({
   const unreadCount = await fetchUnreadCount();
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col bg-background">
       <Navbar isLoggedIn={isLoggedIn} user={user} />
 
 
       {/* --- Main Layout --- */}
       <div className="flex w-full justify-center px-3 pb-8 sm:px-4 md:px-6 lg:px-8">
-        {/* Increased from max-w-6xl to max-w-7xl for more total width */}
-        <div className="flex w-full max-w-7xl gap-5 lg:gap-8">
+        <div className="flex w-full max-w-7xl items-start gap-5 lg:gap-8">
 
 
           <Suspense fallback={<div aria-hidden="true" className="hidden w-48 shrink-0 md:block" />}>

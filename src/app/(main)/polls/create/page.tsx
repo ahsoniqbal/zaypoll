@@ -8,8 +8,8 @@ export default async function CreatePollPage() {
   if (!user?.id) redirect("/?auth=login");
 
   return (
-  <div className="max-w-3xl mx-auto px-4 mt-6 pb-12">
+  <main className="content-shell">
       <PollForm topics={topics} />
-    </div>
+  </main>
   );
 }

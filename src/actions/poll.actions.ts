@@ -18,6 +18,7 @@ import { getAnalyticsEventContext } from "@/lib/server/analytics-context";
 import { analyzeReason, generatePollInsights } from "@/services/gemini-poll-insights.service";
 import pool from "@/lib/db";
 import type { RowDataPacket } from "mysql2/promise";
+import { areAiInsightsEnabled } from "@/lib/server/ai-insights";
 
 export async function createPollAction(
     formData: FormData
@@ -144,9 +145,11 @@ export async function addReasonAction(pollId: number, optionId: number, reason: 
         // Call service
         const insertedData = await addReason(userId, pollId, optionId, trimmed, await getAnalyticsEventContext());
 
-        void analyzeReason(insertedData.id)
-            .then(() => generatePollInsights(pollId))
-            .catch((analysisError) => console.error("Reason insight generation failed:", analysisError));
+        if (areAiInsightsEnabled()) {
+            void analyzeReason(insertedData.id)
+                .then(() => generatePollInsights(pollId))
+                .catch((analysisError) => console.error("Reason insight generation failed:", analysisError));
+        }
         revalidateTag(`poll-analytics:${pollId}`, "max");
 
         //Revalidate only relevant page
@@ -333,6 +336,10 @@ export async function getCommentsByOptionIdAction(optionId: number, sortBy: "lat
 
 export async function refreshPollInsightsAction(pollId: number): Promise<ActionResponse> {
     try {
+        if (!areAiInsightsEnabled()) {
+            throw new AppError("AI insights are currently disabled");
+        }
+
         const session = await auth();
         const userId = session?.user?.id;
         if (!userId) throw new AppError("Please log in to refresh insights");

@@ -21,7 +21,7 @@ export function AppButton({
   children,
   icon,
   href,
-  variant = "secondary",
+  variant = "default",
   size = "lg",
   className,
   disabled,

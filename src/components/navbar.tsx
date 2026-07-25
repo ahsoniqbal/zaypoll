@@ -37,13 +37,13 @@ export default function Navbar({
   const { open } = useAuthModal();
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-16 items-center px-4 md:px-8 gap-4">
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/90 backdrop-blur-lg">
+      <div className="mx-auto flex h-16 w-full max-w-[96rem] items-center gap-4 px-4 md:px-8">
 
         {/* LEFT */}
         <div className="flex shrink-0 items-center gap-2 md:w-40">
           <Link href="/" className="rounded-md focus-visible:ring-2 focus-visible:ring-ring">
-            <span className="text-xl font-semibold tracking-tight">Zaypoll</span>
+            <span className="text-xl font-semibold tracking-tight">Zay<span className="text-primary">poll</span></span>
           </Link>
 
           {/* <form action="/search" method="GET" className="hidden md:block w-64">

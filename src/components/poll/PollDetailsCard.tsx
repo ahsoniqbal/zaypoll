@@ -55,7 +55,7 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
     }
 
     return (
-        <article className={`rounded-xl bg-card p-4 ring-1 ring-foreground/10 sm:p-5 ${!isDetailView ? "cursor-pointer transition-colors hover:bg-card/80" : ""}`}
+        <article className={`surface-card p-4 sm:p-6 ${!isDetailView ? "cursor-pointer transition-all hover:-translate-y-px hover:ring-primary/20 hover:shadow-md" : ""}`}
             onClick={(e) => {
                 if (isDetailView) return;
                 const target = e.target as HTMLElement;
@@ -90,7 +90,7 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
             />
 
             {/* Likes + comments + vote button */}
-            <div className="flex items-center justify-between mt-4 pt-3">
+            <div className="mt-4 flex items-center justify-between border-t pt-3">
                 <div className="flex items-center gap-1">
                     <PollReactions
                         pollId={poll.pollId}
@@ -99,7 +99,7 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
                         userVote={poll.userReaction}
                         isUserLoggedIn={isUserLoggedIn}
                     />
-                    <PollCommentButton pollId={poll.pollId} isDisabled={isDetailView} />
+                    <PollCommentButton pollId={poll.pollId} reasonCount={poll.reasonCount} isDisabled={isDetailView} />
 
                 </div>
 

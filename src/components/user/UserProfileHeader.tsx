@@ -22,7 +22,7 @@ export default function UserProfileHeader({
 
   return (
 
-    <section className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 sm:p-7">
+    <section className="surface-card p-5 sm:p-7">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
 
       {/* LEFT */}

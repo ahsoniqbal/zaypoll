@@ -19,7 +19,7 @@ export default async function SearchPage({
     // Handle empty search
     if (!query) {
         return (
-            <main className="mx-auto w-full max-w-3xl px-1 py-6 sm:px-4">
+            <main className="content-shell">
               <EmptyState title="Search Zaypoll" description="Use the search field above to find polls and discussions." />
             </main>
         );
@@ -34,7 +34,7 @@ export default async function SearchPage({
 
 
     return (
-        <main className="mx-auto w-full max-w-3xl space-y-6 px-1 py-6 sm:px-4">
+        <main className="content-shell space-y-6">
 
             {/* ✅ Search Title */}
             <h1 className="text-xl font-semibold tracking-tight">

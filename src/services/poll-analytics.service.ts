@@ -3,6 +3,7 @@ import { fillTimelineIntervals, groupTopLocations, readableDuration, safePercent
 import type { AnalyticsEventContext, AudienceItem, PollAnalytics, PollInsight, TimelineGranularity } from "@/types/poll-analytics.types";
 import type { PoolConnection, RowDataPacket } from "mysql2/promise";
 import { unstable_cache } from "next/cache";
+import { areAiInsightsEnabled } from "@/lib/server/ai-insights";
 
 type CountRow = RowDataPacket & { count: number };
 
@@ -64,6 +65,7 @@ function timelineSql(granularity: TimelineGranularity) {
 }
 
 async function getPollAnalyticsUncached(pollId: number): Promise<PollAnalytics> {
+  const aiEnabled = areAiInsightsEnabled();
   const [pollRows] = await pool.query<RowDataPacket[]>("SELECT created_at, total_votes FROM polls WHERE id = ? LIMIT 1", [pollId]);
   if (!pollRows.length) throw new Error("Poll not found");
   const createdAt = new Date(pollRows[0].created_at);
@@ -140,7 +142,11 @@ async function getPollAnalyticsUncached(pollId: number): Promise<PollAnalytics> 
       devices: deviceItems,
     },
     sentiment: { positive: Number(sentiment.positive ?? 0), neutral: Number(sentiment.neutral ?? 0), negative: Number(sentiment.negative ?? 0), analyzedReasons: Number(sentiment.analyzed_reasons ?? 0), totalReasons: Number(sentiment.total_reasons ?? 0) },
-    insights, facts, aiConfigured: Boolean(process.env.GEMINI_API_KEY), aiEligible: totalVotes >= 10 && Number(overview.reasons) >= 5,
+    insights: aiEnabled ? insights : null,
+    facts,
+    aiEnabled,
+    aiConfigured: aiEnabled && Boolean(process.env.GEMINI_API_KEY),
+    aiEligible: aiEnabled && totalVotes >= 10 && Number(overview.reasons) >= 5,
   };
 }
 

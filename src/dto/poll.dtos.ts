@@ -10,6 +10,7 @@ export type PollListingDto = {
     title: string;
     content: string;
     totalVotes: number;
+    reasonCount: number;
     upvotes: number;
     downvotes: number;
     userReaction: 1 | -1 | null;
@@ -39,6 +40,7 @@ export type PollDetailsDto = {
     title: string;
     content: string;
     totalVotes: number;
+    reasonCount: number;
     upvotes: number;
     downvotes: number;
     userReaction: 1 | -1 | null;

@@ -1,6 +1,7 @@
 import pool from "@/lib/db";
 import { z } from "zod";
 import type { RowDataPacket } from "mysql2/promise";
+import { areAiInsightsEnabled } from "@/lib/server/ai-insights";
 
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 const meaningfulReasonLength = 12;
@@ -23,6 +24,7 @@ function cleanUserText(value: string, max = 400) {
 }
 
 async function generateJson(prompt: string): Promise<unknown> {
+  if (!areAiInsightsEnabled()) throw new Error("AI insights are disabled");
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("Gemini is not configured");
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
@@ -42,6 +44,7 @@ async function generateJson(prompt: string): Promise<unknown> {
 }
 
 export async function analyzeReason(reasonId: number) {
+  if (!areAiInsightsEnabled()) return null;
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT c.comment FROM option_comments c LEFT JOIN reason_ai_analysis a ON a.reason_id = c.id WHERE c.id = ? AND a.reason_id IS NULL LIMIT 1`,
     [reasonId],
@@ -69,6 +72,7 @@ export async function analyzePendingReasons(pollId: number, limit = 30) {
 }
 
 export async function generatePollInsights(pollId: number, force = false) {
+  if (!areAiInsightsEnabled()) return null;
   if (!process.env.GEMINI_API_KEY) throw new Error("Gemini is not configured");
   await analyzePendingReasons(pollId);
   const [pollResult, reasonResult, existingResult] = await Promise.all([

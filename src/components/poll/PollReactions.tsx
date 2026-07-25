@@ -4,6 +4,7 @@ import { toggleReactionAction } from "@/actions/poll.actions";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { useState, useTransition } from "react";
 import { ArrowBigUp, ArrowBigDown } from "lucide-react";
+import { formatCompactNumber } from "@/lib/utils";
 
 
 type Props = {
@@ -90,14 +91,18 @@ export default function PollReactions({
                 onClick={(e) => handleReaction(e, 1)}
                 className={`flex items-center justify-center h-8 w-8 rounded-full transition-all
                 ${state.reaction === 1
-                        ? "bg-orange-100 text-orange-600"
-                        : "text-muted-foreground hover:bg-background hover:text-orange-500"} `}
+                        ? "bg-primary/15 text-primary"
+                        : "text-muted-foreground hover:bg-background hover:text-primary"} `}
             >
                 <ArrowBigUp className="w-5 h-5" />
             </button>
  
-            <span className="min-w-5 text-center text-xs font-medium tabular-nums">
-                {state.upvotes - state.downvotes}
+            <span
+                className="min-w-5 text-center text-xs font-medium tabular-nums"
+                title={(state.upvotes - state.downvotes).toLocaleString()}
+                aria-label={`${state.upvotes - state.downvotes} net votes`}
+            >
+                {formatCompactNumber(state.upvotes - state.downvotes)}
             </span>
 
             <button
@@ -107,8 +112,8 @@ export default function PollReactions({
                 onClick={(e) => handleReaction(e, -1)}
                 className={`flex items-center justify-center h-8 w-8 rounded-full transition-all
             ${state.reaction === -1
-                        ? "bg-blue-100 text-blue-600"
-                        : "text-muted-foreground hover:bg-background hover:text-blue-500"}`}
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-background hover:text-foreground"}`}
             >
                 <ArrowBigDown className="w-5 h-5" />
             </button>

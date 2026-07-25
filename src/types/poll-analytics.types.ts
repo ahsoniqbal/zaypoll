@@ -65,6 +65,7 @@ export type PollAnalytics = {
   };
   insights: PollInsight | null;
   facts: Array<{ text: string; type: string }>;
+  aiEnabled: boolean;
   aiConfigured: boolean;
   aiEligible: boolean;
 };

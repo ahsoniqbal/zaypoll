@@ -82,7 +82,7 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
     }
 
     return (
-        <article className="cursor-pointer rounded-xl bg-card p-4 ring-1 ring-foreground/10 transition-colors hover:bg-card/80 sm:p-5"
+        <article className="surface-card cursor-pointer p-4 transition-all hover:-translate-y-px hover:ring-primary/20 hover:shadow-md sm:p-5"
             onClick={(e) => {
                 const target = e.target as HTMLElement;
                 if (target.closest("input, button, textarea, a, label")) return; //Ignore clicks on interactive elements
@@ -128,7 +128,7 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
             </div>
 
             {/* Likes + comments + vote button */}
-            <div className="flex items-center justify-between mt-4 pt-3 border-t">
+            <div className="mt-4 flex items-center justify-between border-t pt-3">
                 <div className="flex items-center gap-1">
                     <PollReactions
                         pollId={poll.pollId}
@@ -137,7 +137,7 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                         userVote={poll.userReaction}
                         isUserLoggedIn={isUserLoggedIn}
                     />
-                    <PollCommentButton pollId={poll.pollId} isDisabled={false} />
+                    <PollCommentButton pollId={poll.pollId} reasonCount={poll.reasonCount} />
 
                 </div>
 

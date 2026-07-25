@@ -346,6 +346,7 @@ export async function getUserPolls(
       p.title,
       p.content,
       p.total_votes,
+      (SELECT COUNT(*) FROM option_comments oc INNER JOIN poll_options reason_option ON reason_option.id = oc.option_id WHERE reason_option.poll_id = p.id) AS reason_count,
       p.upvotes,
       p.downvotes,
       p.created_at,
@@ -364,7 +365,10 @@ export async function getUserPolls(
       po.option_text,
       po.vote_count,
 
-      pv.option_id AS user_voted_option_id
+      pv.option_id AS user_voted_option_id,
+
+      oc.id AS user_reason_id,
+      oc.comment AS user_reason
 
     FROM (${baseQuery}) p
 
@@ -380,6 +384,9 @@ export async function getUserPolls(
 
     LEFT JOIN user_follows uf
       ON uf.following_id = u.id AND uf.follower_id = ?
+
+    LEFT JOIN option_comments oc
+      ON oc.option_id = pv.option_id AND oc.user_id = ?
   `;
 
     const countSql = `
@@ -389,7 +396,7 @@ export async function getUserPolls(
   `;
 
     const [[rows], [countResult]]: any = await Promise.all([
-        pool.query(dataSql, [profileUserId, limit, offset, loggedInUserId, loggedInUserId, loggedInUserId]),
+        pool.query(dataSql, [profileUserId, limit, offset, loggedInUserId, loggedInUserId, loggedInUserId, loggedInUserId]),
         pool.query(countSql, [profileUserId]),
     ]);
 
@@ -405,6 +412,7 @@ export async function getUserPolls(
                 title: row.title,
                 content: row.content,
                 totalVotes: row.total_votes,
+                reasonCount: Number(row.reason_count),
                 upvotes: row.upvotes,
                 downvotes: row.downvotes,
                 userReaction: loggedInUserId ? (row.user_reaction ?? null) : null,

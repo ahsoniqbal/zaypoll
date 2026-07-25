@@ -13,7 +13,7 @@ export default async function NotificationsPage() {
   const { notifications } = await fetchNotificationBundle();
 
   return (
-    <main className="mt-4 w-full min-w-0 max-w-3xl flex-1">
+    <main className="content-shell">
       <Card className="gap-0 py-0">
         <CardHeader className="border-b py-4">
           <CardTitle>Notifications</CardTitle>

@@ -8,12 +8,15 @@ import { ActionResponse } from "@/types/common.types";
 import { revalidatePath, revalidateTag } from "next/cache";
 import {
     POLL_DESCRIPTION_MAX_LENGTH,
+    POLL_DURATION_HOURS,
+    POLL_DURATION_VALUES,
     POLL_MAX_OPTIONS,
     POLL_MAX_TOPICS,
     POLL_MIN_OPTIONS,
     POLL_MIN_TOPICS,
     POLL_OPTION_MAX_LENGTH,
     POLL_TITLE_MAX_LENGTH,
+    type PollDuration,
 } from "@/types/constants";
 import { getAnalyticsEventContext } from "@/lib/server/analytics-context";
 import { analyzeReason, generatePollInsights } from "@/services/gemini-poll-insights.service";
@@ -35,6 +38,7 @@ export async function createPollAction(
 
         const title = formData.get("title")?.toString().trim() ?? "";
         const content = formData.get("content")?.toString().trim() ?? "";
+        const durationValue = formData.get("duration")?.toString() ?? "never";
         const topicIds = [...new Set(
             formData.getAll("topicIds").map((value) => Number(value))
         )];
@@ -87,6 +91,16 @@ export async function createPollAction(
             throw new AppError("Invalid topic selected");
         }
 
+        if (!POLL_DURATION_VALUES.includes(durationValue as PollDuration)) {
+            throw new AppError("Invalid poll duration");
+        }
+
+        const duration = durationValue as PollDuration;
+        const durationHours = POLL_DURATION_HOURS[duration];
+        const expiresAt = durationHours === null
+            ? null
+            : new Date(Date.now() + durationHours * 60 * 60 * 1000);
+
         const placeholders = topicIds.map(() => "?").join(", ");
         const [topicRows] = await pool.query<(RowDataPacket & { count: number })[]>(
             `
@@ -109,6 +123,7 @@ export async function createPollAction(
             options,
             createdBy: userId,
             topicIds,
+            expiresAt,
         });
 
 

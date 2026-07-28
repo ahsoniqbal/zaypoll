@@ -5,9 +5,8 @@ import { CommentDto, PollOptionDto } from "@/dto/poll.dtos";
 import { getPollReasonsAction } from "@/actions/poll.actions";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import CommentReactions from "./CommentReactions";
-import { format } from "date-fns";
 import ReasonComposer from "./ReasonComposer";
-import { getInitials } from "@/lib/utils";
+import { formatRelativeTime, getInitials } from "@/lib/utils";
 
 type Props = {
   pollId: number;
@@ -191,7 +190,7 @@ export default function ReasonSection({
               <p className="text-sm font-medium">
                 {comment.user.name}
                 <span className="ml-2 text-xs font-normal text-muted-foreground">
-                  • {format(new Date(comment.createdAt), "MMM d")}
+                  • {formatRelativeTime(comment.createdAt)}
                 </span>
               </p>
 

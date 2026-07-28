@@ -166,7 +166,7 @@ export function MySqlAuthAdapter(): Adapter {
           [token.identifier],
         );
         await connection.execute(
-          "DELETE FROM verification_tokens WHERE expires < NOW() LIMIT 500",
+          "DELETE FROM verification_tokens WHERE expires < UTC_TIMESTAMP() LIMIT 500",
         );
         await connection.execute(
           `INSERT INTO verification_tokens (identifier, token, expires)

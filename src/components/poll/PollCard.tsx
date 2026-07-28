@@ -11,6 +11,8 @@ import PollCommentButton from "./PollCommentButton";
 import { AppButton } from "../AppButton";
 import ReasonComposer from "./ReasonComposer";
 import { useAuthModal } from "@/hooks/useAuthModal";
+import { usePollExpiry } from "@/hooks/usePollExpiry";
+import PollExpiryStatus from "./PollExpiryStatus";
 
 
 type Props = {
@@ -30,9 +32,12 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
     const [hasVoted, setHasVoted] = useState(poll.hasVoted);
     const [userVoteOptionId, setUserVoteOptionId] = useState(poll.userVoteOptionId);
     const [hasReason, setHasReason] = useState(poll.hasReason);
+    const [serverExpired, setServerExpired] = useState(false);
+    const hasReachedExpiry = usePollExpiry(poll.expiresAt, poll.isExpired);
+    const isExpired = serverExpired || hasReachedExpiry;
 
     const onClickVoteButton = async () => {
-        if (!selectedOption || isPending || hasVoted) return;
+        if (!selectedOption || isPending || hasVoted || isExpired) return;
 
         if (!isUserLoggedIn) {
             open();
@@ -61,14 +66,17 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
 
         setSelectedOption(null);
         try {
-            const success = await handleVote(selectedOption);
+            const result = await handleVote(selectedOption);
 
             // ROLLBACK if failed
-            if (!success) {
+            if (!result.success) {
                 setOptions(prevOptions);
                 setTotalVotes(prevTotalVotes);
                 setHasVoted(prevHasVoted);
                 setUserVoteOptionId(prevUserVoteOptionId);
+                if (result.message.toLowerCase().includes("poll has ended")) {
+                    setServerExpired(true);
+                }
             }
 
         } catch {
@@ -96,6 +104,7 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                 image={poll.user.image}
                 createdAt={poll.createdAt}
             />
+            <PollExpiryStatus expiresAt={poll.expiresAt} isExpired={isExpired} />
 
             <div className="mb-4 mt-3">
                 {poll.title && (
@@ -113,9 +122,10 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                 totalVotes={totalVotes}
                 selectedOption={selectedOption}
                 onSelect={setSelectedOption}
+                isExpired={isExpired}
             />
 
-            <div className="mt-3" onClick={(event) => event.stopPropagation()}>
+            {!isExpired && <div className="mt-3" onClick={(event) => event.stopPropagation()}>
                 <ReasonComposer
                     pollId={poll.pollId}
                     optionId={userVoteOptionId}
@@ -125,7 +135,7 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                     hasReason={hasReason}
                     onReasonAdded={() => setHasReason(true)}
                 />
-            </div>
+            </div>}
 
             {/* Likes + comments + vote button */}
             <div className="mt-4 flex items-center justify-between border-t pt-3">
@@ -143,7 +153,7 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
 
                 <div onClick={(e) => e.stopPropagation()} >
                     {/* <Button type="button" size="sm" className="rounded-full disabled:opacity-50 hover:shadow-sm active:scale-[0.98] transition-transform disabled:cursor-not-allowed"
-                        disabled={!selectedOption || isPending || hasVoted}
+                        disabled={!selectedOption || isPending || hasVoted || isExpired}
                         onClick={onClickVoteButton}
                     >
                         {isPending ? "Voting..." : "Vote"}
@@ -156,7 +166,7 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                         isLoading={isPending}
                         loadingText="Voting..."
                     >
-                        Vote
+                        {isExpired ? "Poll ended" : "Vote"}
                     </AppButton>
 
 

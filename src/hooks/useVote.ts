@@ -3,11 +3,15 @@
 import { useTransition } from "react";
 import { castVoteAction } from "@/actions/poll.actions";
 import { toast } from "react-hot-toast/headless";
+import type { ActionResponse } from "@/types/common.types";
 
 export function useVote(pollId: number) {
   const [isPending, startTransition] = useTransition();
 
-  const handleVote = (optionId: number, isDetailsPage: boolean = false): Promise<boolean> => {
+  const handleVote = (
+    optionId: number,
+    isDetailsPage: boolean = false,
+  ): Promise<ActionResponse<{ optionId: number }>> => {
     return new Promise(resolve => {
       startTransition(async () => {
         try {
@@ -15,16 +19,16 @@ export function useVote(pollId: number) {
 
           if (!res.success) {
             toast.error(res.message);
-            resolve(false);
+            resolve(res);
             return;
           }
 
           toast.success(res.message);
-          resolve(true);
+          resolve(res);
 
         } catch {
           toast.error("Something went wrong");
-          resolve(false);
+          resolve({ success: false, message: "Something went wrong" });
         }
       });
     });

@@ -159,7 +159,7 @@ export async function markAsRead(userId: number, notificationId: number) {
     UPDATE notifications
     SET 
       is_read = 1,
-      read_at = COALESCE(read_at, NOW())
+      read_at = COALESCE(read_at, UTC_TIMESTAMP())
     WHERE id = ? AND user_id = ?
     `,
         [notificationId, userId]
@@ -178,7 +178,7 @@ export async function markAllAsRead(userId: number) {
         `
     UPDATE notifications
     SET is_read = 1,
-        read_at = COALESCE(read_at, NOW())
+        read_at = COALESCE(read_at, UTC_TIMESTAMP())
     WHERE user_id = ? AND is_read = 0
     `,
         [userId]

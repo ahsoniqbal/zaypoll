@@ -15,6 +15,11 @@ type ReactionRow = RowDataPacket & {
     vote: Vote;
 };
 
+type PollExpiryRow = RowDataPacket & {
+    expires_at: Date | null;
+    is_expired: number;
+};
+
 //delete this in prod 
 const delay = () => new Promise((resolve) => setTimeout(() => resolve('intentional delay'), 1000));
 
@@ -22,6 +27,14 @@ function validateVote(vote: number): asserts vote is Vote {
     if (vote !== 1 && vote !== -1) {
         throw new Error("Invalid vote");
     }
+}
+
+function getPollExpiry(row: { expires_at: Date | string | null }) {
+    const expiresAt = row.expires_at ? new Date(row.expires_at).toISOString() : null;
+    return {
+        expiresAt,
+        isExpired: expiresAt !== null && Date.parse(expiresAt) <= Date.now(),
+    };
 }
 
 
@@ -64,7 +77,7 @@ export async function getPolls(
     (
     LOG10(GREATEST(p.total_votes, 1)) * 5 +
     ((p.upvotes - p.downvotes) / GREATEST(p.total_votes, 1)) * 8 +
-    (1 / POW((TIMESTAMPDIFF(HOUR, p.created_at, NOW()) + 2), 1.3)) * 10
+    (1 / POW((TIMESTAMPDIFF(HOUR, p.created_at, UTC_TIMESTAMP()) + 2), 1.3)) * 10
     )
     `;
 
@@ -150,6 +163,7 @@ export async function getPolls(
       p.upvotes,
       p.downvotes,
       p.created_at,
+      p.expires_at,
 
       u.followers_count,
       u.following_count,
@@ -248,6 +262,7 @@ export async function getPolls(
                 downvotes: row.downvotes,
                 userReaction: userId ? row.user_reaction ?? null : null,
                 createdAt: new Date(row.created_at).toISOString(),
+                ...getPollExpiry(row),
 
                 hasVoted: userId ? row.user_voted_option_id != null : false,
                 userVoteOptionId: row.user_voted_option_id || null,
@@ -302,7 +317,7 @@ export async function getTrendingPolls(userId: number | null, limit: number = 6)
     (
         LOG10(GREATEST(p.total_votes, 1)) * 4 +
         ((p.upvotes - p.downvotes) / GREATEST(p.total_votes, 1)) * 6 +
-        (p.total_votes / GREATEST(TIMESTAMPDIFF(HOUR, p.created_at, NOW()), 1)) * 5
+        (p.total_votes / GREATEST(TIMESTAMPDIFF(HOUR, p.created_at, UTC_TIMESTAMP()), 1)) * 5
     )
     `;
 
@@ -316,6 +331,7 @@ export async function getTrendingPolls(userId: number | null, limit: number = 6)
             p.upvotes,
             p.downvotes,
             p.created_at,
+            p.expires_at,
 
             u.followers_count,
             u.following_count,
@@ -344,7 +360,7 @@ export async function getTrendingPolls(userId: number | null, limit: number = 6)
                 p.*,
                 ${trendingScore} AS score
             FROM polls p
-            WHERE p.created_at >= NOW() - INTERVAL 7 DAY
+            WHERE p.created_at >= UTC_TIMESTAMP() - INTERVAL 7 DAY
             ORDER BY score DESC
             LIMIT ?
 
@@ -401,6 +417,7 @@ export async function getTrendingPolls(userId: number | null, limit: number = 6)
                     : null,
 
                 createdAt: new Date(row.created_at).toISOString(),
+                ...getPollExpiry(row),
 
                 hasVoted: userId
                     ? row.user_voted_option_id != null
@@ -786,7 +803,7 @@ export async function searchPolls(
                     AGAINST (? IN NATURAL LANGUAGE MODE) * 10
                 + LEAST(p.total_votes, 1000) * 0.01
                 + GREATEST(-20, LEAST(20, p.upvotes - p.downvotes)) * 0.1
-                + (1 / (GREATEST(0, TIMESTAMPDIFF(HOUR, p.created_at, NOW())) + 24)) * 10
+                + (1 / (GREATEST(0, TIMESTAMPDIFF(HOUR, p.created_at, UTC_TIMESTAMP())) + 24)) * 10
             ) AS score
 
         FROM polls p
@@ -812,6 +829,7 @@ export async function searchPolls(
             p.upvotes,
             p.downvotes,
             p.created_at,
+            p.expires_at,
 
             u.followers_count,
             u.following_count,
@@ -916,6 +934,7 @@ export async function searchPolls(
                 downvotes: row.downvotes,
                 userReaction: userId ? (row.user_reaction ?? null) : null,
                 createdAt: new Date(row.created_at).toISOString(),
+                ...getPollExpiry(row),
                 hasVoted: userId ? row.user_voted_option_id != null : false,
                 userVoteOptionId: row.user_voted_option_id || null,
                 hasReason: userId
@@ -1145,6 +1164,7 @@ export async function getPollById(userId: number | null, pollId: number): Promis
             uf.following_id AS is_following,
             pr.vote AS user_reaction,
             p.created_at,
+            p.expires_at,
 
             u.id AS user_id,
             u.name,
@@ -1197,6 +1217,7 @@ export async function getPollById(userId: number | null, pollId: number): Promis
                 downvotes: row.downvotes,
                 userReaction: userId ? (row.user_reaction ?? null) : null,
                 createdAt: new Date(row.created_at).toISOString(),
+                ...getPollExpiry(row),
                 hasVoted: userId ? row.user_voted_option_id != null : false,
                 userVoteOptionId: row.user_voted_option_id || null,
 
@@ -1244,9 +1265,9 @@ export async function createPoll(poll: CreatePollDto) {
 
         //1. Insert poll
         const [result]: any = await conn.query(
-            `INSERT INTO polls (title, content, created_by)
-             VALUES (?, ?, ?)`,
-            [poll.title, poll.content, poll.createdBy]
+            `INSERT INTO polls (title, content, created_by, expires_at)
+             VALUES (?, ?, ?, ?)`,
+            [poll.title, poll.content, poll.createdBy, poll.expiresAt]
         );
 
         const pollId = result.insertId;
@@ -1384,11 +1405,23 @@ export async function castVote(userId: number, pollId: number, optionId: number,
     try {
         await conn.beginTransaction();
 
-
-        await conn.query(
-            `INSERT INTO poll_votes (poll_id, option_id, user_id) VALUES (?, ?, ?)`,
-            [pollId, optionId, userId]
+        const [pollRows] = await conn.query<PollExpiryRow[]>(
+            `SELECT
+                expires_at,
+                expires_at IS NOT NULL AND expires_at <= CURRENT_TIMESTAMP AS is_expired
+             FROM polls
+             WHERE id = ?
+             FOR UPDATE`,
+            [pollId]
         );
+
+        if (!pollRows.length) {
+            throw new AppError("Poll not found");
+        }
+
+        if (Boolean(pollRows[0].is_expired)) {
+            throw new AppError("This poll has ended. Voting is no longer available.");
+        }
 
 
         const [optionRows]: any = await conn.query(`SELECT id FROM poll_options WHERE id = ? AND poll_id = ?`,
@@ -1397,6 +1430,11 @@ export async function castVote(userId: number, pollId: number, optionId: number,
         if (!optionRows.length) {
             throw new AppError("Invalid option selected");
         }
+
+        await conn.query(
+            `INSERT INTO poll_votes (poll_id, option_id, user_id) VALUES (?, ?, ?)`,
+            [pollId, optionId, userId]
+        );
 
         await conn.query(
             `UPDATE poll_options SET vote_count = vote_count + 1 WHERE id = ?`,

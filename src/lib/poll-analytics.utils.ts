@@ -1,5 +1,6 @@
-import { differenceInHours, differenceInDays, format, startOfHour, startOfDay, startOfWeek, addHours, addDays, addWeeks } from "date-fns";
+import { differenceInHours, differenceInDays } from "date-fns";
 import type { AudienceItem, DeviceType, TimelineGranularity, VoteTimelinePoint } from "@/types/poll-analytics.types";
+import { formatRelativeTime } from "@/lib/utils";
 
 export function safePercentage(value: number, total: number) {
   return total > 0 ? Math.round((value / total) * 1000) / 10 : 0;
@@ -13,13 +14,29 @@ export function timelineGranularity(createdAt: Date, now = new Date()): Timeline
 }
 
 function intervalStart(date: Date, granularity: TimelineGranularity) {
-  if (granularity === "hour") return startOfHour(date);
-  if (granularity === "day") return startOfDay(date);
-  return startOfWeek(date, { weekStartsOn: 1 });
+  const result = new Date(date);
+  result.setUTCMinutes(0, 0, 0);
+  if (granularity === "hour") return result;
+  result.setUTCHours(0, 0, 0, 0);
+  if (granularity === "day") return result;
+  const daysSinceMonday = (result.getUTCDay() + 6) % 7;
+  result.setUTCDate(result.getUTCDate() - daysSinceMonday);
+  return result;
 }
 
 function intervalKey(date: Date, granularity: TimelineGranularity) {
-  return granularity === "hour" ? format(date, "yyyy-MM-dd HH:00") : format(date, "yyyy-MM-dd");
+  const iso = date.toISOString();
+  return granularity === "hour"
+    ? `${iso.slice(0, 10)} ${iso.slice(11, 13)}:00`
+    : iso.slice(0, 10);
+}
+
+function addUtcInterval(date: Date, granularity: TimelineGranularity) {
+  const result = new Date(date);
+  if (granularity === "hour") result.setUTCHours(result.getUTCHours() + 1);
+  else if (granularity === "day") result.setUTCDate(result.getUTCDate() + 1);
+  else result.setUTCDate(result.getUTCDate() + 7);
+  return result;
 }
 
 export function fillTimelineIntervals(
@@ -30,7 +47,6 @@ export function fillTimelineIntervals(
 ): VoteTimelinePoint[] {
   const counts = new Map(rows.map((row) => [intervalKey(new Date(row.period), granularity), Number(row.voteCount)]));
   const points: VoteTimelinePoint[] = [];
-  const add = granularity === "hour" ? addHours : granularity === "day" ? addDays : addWeeks;
   let cursor = intervalStart(createdAt, granularity);
   const end = intervalStart(now, granularity);
   const maximumPoints = granularity === "hour" ? 49 : granularity === "day" ? 62 : 160;
@@ -38,10 +54,10 @@ export function fillTimelineIntervals(
     const period = intervalKey(cursor, granularity);
     points.push({
       period: cursor.toISOString(),
-      label: granularity === "hour" ? format(cursor, "MMM d, HH:mm") : granularity === "day" ? format(cursor, "MMM d") : `Week of ${format(cursor, "MMM d")}`,
+      label: formatRelativeTime(cursor),
       voteCount: counts.get(period) ?? 0,
     });
-    cursor = add(cursor, 1);
+    cursor = addUtcInterval(cursor, granularity);
   }
   return points;
 }

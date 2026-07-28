@@ -82,7 +82,7 @@ export default function PollReactions({
     };
 
     return (
-        <div className="flex items-center gap-1 rounded-full bg-muted p-0.5">
+        <div className="flex items-center gap-1 rounded-full bg-slate-200/50 p-0.5">
 
             <button
                 type="button"
@@ -92,13 +92,13 @@ export default function PollReactions({
                 className={`flex items-center justify-center h-8 w-8 rounded-full transition-all
                 ${state.reaction === 1
                         ? "bg-primary/15 text-primary"
-                        : "text-muted-foreground hover:bg-background hover:text-primary"} `}
+                        : "hover:bg-background hover:text-primary"} `}
             >
                 <ArrowBigUp className="w-5 h-5" />
             </button>
  
             <span
-                className="min-w-5 text-center text-xs font-medium tabular-nums"
+                className="min-w-3 text-center text-sm font-medium tabular-nums"
                 title={(state.upvotes - state.downvotes).toLocaleString()}
                 aria-label={`${state.upvotes - state.downvotes} net votes`}
             >
@@ -112,8 +112,8 @@ export default function PollReactions({
                 onClick={(e) => handleReaction(e, -1)}
                 className={`flex items-center justify-center h-8 w-8 rounded-full transition-all
             ${state.reaction === -1
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:bg-background hover:text-foreground"}`}
+                        ? "bg-blue-600/15 text-blue-600"
+                        : "hover:bg-background hover:text-blue-400"}`}
             >
                 <ArrowBigDown className="w-5 h-5" />
             </button>

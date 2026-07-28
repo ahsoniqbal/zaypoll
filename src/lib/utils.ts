@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
+import { formatDistanceToNow } from "date-fns"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -23,5 +24,17 @@ const compactNumberFormatter = new Intl.NumberFormat("en", {
 
 export function formatCompactNumber(value: number) {
     return compactNumberFormatter.format(value);
+}
+
+export function parseUtcDate(value: string | Date) {
+  if (value instanceof Date) return value;
+  const normalized = value.includes("T") ? value : value.replace(" ", "T");
+  return new Date(/(?:Z|[+-]\d{2}:\d{2})$/.test(normalized) ? normalized : `${normalized}Z`);
+}
+
+export function formatRelativeTime(value: string | Date) {
+  return formatDistanceToNow(parseUtcDate(value), {
+    addSuffix: true,
+  });
 }
 

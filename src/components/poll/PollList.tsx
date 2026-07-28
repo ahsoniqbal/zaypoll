@@ -35,8 +35,6 @@ export default function PollList(props: Props) {
 
       <CreatePollButton isLoggedIn={isUserLoggedIn} />
 
-
-
       <PollFeed
         polls={polls}
         page={page}

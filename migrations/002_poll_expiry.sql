@@ -1,0 +1,2 @@
+ALTER TABLE polls
+ADD COLUMN expires_at TIMESTAMP NULL DEFAULT NULL AFTER created_at;

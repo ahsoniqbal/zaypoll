@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { formatDistanceToNow } from "date-fns";
+import { formatRelativeTime } from "@/lib/utils";
 import { Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -96,7 +96,7 @@ export default function NotificationList({
                   {getNotificationMessage(notification)}
                 </span>
                 <span className="mt-1 block text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                  {formatRelativeTime(notification.created_at)}
                 </span>
               </span>
             </button>

@@ -12,6 +12,8 @@ import { AppButton } from "../AppButton";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import type { AnalyticsTab, PollAnalytics } from "@/types/poll-analytics.types";
 import PollDetailTabs from "./PollDetailTabs";
+import { usePollExpiry } from "@/hooks/usePollExpiry";
+import PollExpiryStatus from "./PollExpiryStatus";
 
 type Props = {
     poll: PollListingDto;
@@ -34,9 +36,12 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
 
     const router = useRouter();
     const [hasReason, setHasReason] = useState(poll.hasReason);
+    const [serverExpired, setServerExpired] = useState(false);
+    const hasReachedExpiry = usePollExpiry(poll.expiresAt, poll.isExpired);
+    const isExpired = serverExpired || hasReachedExpiry;
 
     const onClickVoteButton = async () => {
-        if (!selectedOption || isPending || hasVoted) {
+        if (!selectedOption || isPending || hasVoted || isExpired) {
             return;
         }
 
@@ -45,12 +50,14 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
             return;
         }
 
-        const success = await handleVote(selectedOption, true);
+        const result = await handleVote(selectedOption, true);
 
-        if (success) {
+        if (result.success) {
             setHasVoted(true);
             setUserVoteOptionId(selectedOption);
             setSelectedOption(null);
+        } else if (result.message.toLowerCase().includes("poll has ended")) {
+            setServerExpired(true);
         }
     }
 
@@ -70,6 +77,7 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
                 image={poll.user.image}
                 createdAt={poll.createdAt}
             />
+            <PollExpiryStatus expiresAt={poll.expiresAt} isExpired={isExpired} />
 
             <div className="mt-3 mb-4">
                 {poll.title && (
@@ -87,6 +95,7 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
                 totalVotes={poll.totalVotes}
                 selectedOption={selectedOption}
                 onSelect={setSelectedOption}
+                isExpired={isExpired}
             />
 
             {/* Likes + comments + vote button */}
@@ -105,7 +114,7 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
 
                 <div onClick={(e) => e.stopPropagation()} >
                     {/* <Button type="button" size="sm" className="rounded-full disabled:opacity-50 hover:shadow-sm active:scale-[0.98] transition-transform disabled:cursor-not-allowed"
-                        disabled={!selectedOption || isPending || hasVoted}
+                        disabled={!selectedOption || isPending || hasVoted || isExpired}
                         role={!isDetailView ? "button" : undefined}
                         tabIndex={!isDetailView ? 0 : undefined}
                         onClick={onClickVoteButton}
@@ -122,7 +131,7 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
                         isLoading={isPending}
                         loadingText="Voting..."
                     >
-                        Vote
+                        {isExpired ? "Poll ended" : "Vote"}
                     </AppButton>
                 </div>
 

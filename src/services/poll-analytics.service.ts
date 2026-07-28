@@ -1,6 +1,6 @@
 import pool from "@/lib/db";
-import { fillTimelineIntervals, groupTopLocations, readableDuration, safePercentage, timelineGranularity } from "@/lib/poll-analytics.utils";
-import type { AnalyticsEventContext, AudienceItem, PollAnalytics, PollInsight, TimelineGranularity } from "@/types/poll-analytics.types";
+import { fillTimelineIntervals, readableDuration, safePercentage, timelineGranularity } from "@/lib/poll-analytics.utils";
+import type { AnalyticsEventContext, PollAnalytics, PollInsight, TimelineGranularity } from "@/types/poll-analytics.types";
 import type { PoolConnection, RowDataPacket } from "mysql2/promise";
 import { unstable_cache } from "next/cache";
 import { areAiInsightsEnabled } from "@/lib/server/ai-insights";
@@ -86,17 +86,28 @@ async function getPollAnalyticsUncached(pollId: number): Promise<PollAnalytics> 
       SELECT ${timelineSql(granularity)} AS period, COUNT(*) AS vote_count
       FROM poll_votes WHERE poll_id = ? GROUP BY period ORDER BY period`, [pollId]),
     pool.query<RowDataPacket[]>(`
-      SELECT u.age_group, COUNT(*) AS voter_count FROM poll_votes v
-      INNER JOIN users u ON u.id = v.user_id WHERE v.poll_id = ? AND u.age_group IS NOT NULL
-      GROUP BY u.age_group ORDER BY FIELD(u.age_group, 'under_18','18_24','25_34','35_44','45_54','55_plus')`, [pollId]),
+      SELECT u.age_group, o.id AS option_id, o.option_text, COUNT(*) AS vote_count
+      FROM poll_votes v
+      INNER JOIN users u ON u.id = v.user_id
+      INNER JOIN poll_options o ON o.id = v.option_id AND o.poll_id = v.poll_id
+      WHERE v.poll_id = ? AND u.age_group IS NOT NULL
+      GROUP BY u.age_group, o.id, o.option_text, o.display_order
+      ORDER BY FIELD(u.age_group, 'under_18','18_24','25_34','35_44','45_54','55_plus'), o.display_order, o.id`, [pollId]),
     pool.query<CountRow[]>("SELECT COUNT(*) AS count FROM poll_votes WHERE poll_id = ?", [pollId]),
     pool.query<RowDataPacket[]>(`
-      SELECT country_code AS label, COUNT(*) AS count FROM poll_events
-      WHERE poll_id = ? AND event_type = 'VOTE' AND country_code IS NOT NULL
-      GROUP BY country_code ORDER BY count DESC`, [pollId]),
+      SELECT e.country_code, o.id AS option_id, o.option_text, COUNT(*) AS vote_count
+      FROM poll_events e
+      INNER JOIN poll_options o ON o.id = e.option_id AND o.poll_id = e.poll_id
+      WHERE e.poll_id = ? AND e.event_type = 'VOTE' AND e.country_code IS NOT NULL
+      GROUP BY e.country_code, o.id, o.option_text, o.display_order
+      ORDER BY e.country_code, o.display_order, o.id`, [pollId]),
     pool.query<RowDataPacket[]>(`
-      SELECT device_type AS label, COUNT(*) AS count FROM poll_events
-      WHERE poll_id = ? AND event_type = 'VOTE' GROUP BY device_type ORDER BY count DESC`, [pollId]),
+      SELECT e.device_type, o.id AS option_id, o.option_text, COUNT(*) AS vote_count
+      FROM poll_events e
+      INNER JOIN poll_options o ON o.id = e.option_id AND o.poll_id = e.poll_id
+      WHERE e.poll_id = ? AND e.event_type = 'VOTE'
+      GROUP BY e.device_type, o.id, o.option_text, o.display_order
+      ORDER BY e.device_type, o.display_order, o.id`, [pollId]),
     pool.query<RowDataPacket[]>(`
       SELECT COUNT(*) AS analyzed_reasons,
         SUM(sentiment = 'positive') AS positive, SUM(sentiment = 'neutral') AS neutral, SUM(sentiment = 'negative') AS negative,
@@ -108,12 +119,8 @@ async function getPollAnalyticsUncached(pollId: number): Promise<PollAnalytics> 
   const overview = overviewResult[0][0];
   const distributionRows = distributionResult[0];
   const totalVotes = distributionRows.reduce((sum, row) => sum + Number(row.vote_count), 0);
-  const knownAge = ageResult[0].reduce((sum, row) => sum + Number(row.voter_count), 0);
+  const knownAge = ageResult[0].reduce((sum, row) => sum + Number(row.vote_count), 0);
   const allVoters = Number(audienceTotalResult[0][0]?.count ?? 0);
-  const audienceItems = (rows: RowDataPacket[], formatter = (label: string) => label): AudienceItem[] => {
-    const total = rows.reduce((sum, row) => sum + Number(row.count), 0);
-    return rows.map((row) => ({ label: formatter(String(row.label)), count: Number(row.count), percentage: safePercentage(Number(row.count), total) }));
-  };
   const insightRow = insightResult[0][0];
   const insights: PollInsight | null = insightRow ? {
     summary: insightRow.summary,
@@ -128,8 +135,69 @@ async function getPollAnalyticsUncached(pollId: number): Promise<PollAnalytics> 
     const leader = [...distributionRows].sort((a, b) => Number(b.vote_count) - Number(a.vote_count))[0];
     facts.push({ type: "vote", text: `${leader.option_text} currently leads with ${safePercentage(Number(leader.vote_count), totalVotes)}% of votes.` });
   }
-  const deviceItems = audienceItems(deviceResult[0], (label) => label[0]?.toUpperCase() + label.slice(1));
-  if (deviceItems[0]?.percentage >= 60) facts.push({ type: "device", text: `${deviceItems[0].percentage}% of recorded voter devices are ${deviceItems[0].label.toLowerCase()}.` });
+  const deviceTypes = [...new Set(deviceResult[0].map((row) => String(row.device_type)))];
+  const deviceGroups = deviceTypes
+    .map((deviceType) => {
+      const rows = deviceResult[0].filter((row) => row.device_type === deviceType);
+      const totalVotes = rows.reduce((sum, row) => sum + Number(row.vote_count), 0);
+      return {
+        deviceType,
+        label: deviceType[0]?.toUpperCase() + deviceType.slice(1),
+        totalVotes,
+        optionVotes: distributionRows.map((option) => {
+          const voteCount = Number(rows.find((row) => Number(row.option_id) === Number(option.id))?.vote_count ?? 0);
+          return {
+            optionId: Number(option.id),
+            voteCount,
+            percentage: safePercentage(voteCount, totalVotes),
+          };
+        }),
+      };
+    })
+    .sort((a, b) => b.totalVotes - a.totalVotes);
+  const recordedDeviceVotes = deviceGroups.reduce((sum, group) => sum + group.totalVotes, 0);
+  if (deviceGroups[0] && safePercentage(deviceGroups[0].totalVotes, recordedDeviceVotes) >= 60) {
+    facts.push({ type: "device", text: `${safePercentage(deviceGroups[0].totalVotes, recordedDeviceVotes)}% of recorded voter devices are ${deviceGroups[0].label.toLowerCase()}.` });
+  }
+  const ageGroupOrder = ["under_18", "18_24", "25_34", "35_44", "45_54", "55_plus"];
+  const ageLabel = (ageGroup: string) => ageGroup
+    .replace("under_18", "Under 18")
+    .replace("55_plus", "55+")
+    .replace("_", "–");
+  const ageGroups = ageGroupOrder
+    .filter((ageGroup) => ageResult[0].some((row) => row.age_group === ageGroup))
+    .map((ageGroup) => {
+      const rows = ageResult[0].filter((row) => row.age_group === ageGroup);
+      return {
+        ageGroup,
+        label: ageLabel(ageGroup),
+        totalVotes: rows.reduce((sum, row) => sum + Number(row.vote_count), 0),
+        optionVotes: distributionRows.map((option) => ({
+          optionId: Number(option.id),
+          voteCount: Number(rows.find((row) => Number(row.option_id) === Number(option.id))?.vote_count ?? 0),
+        })),
+      };
+    });
+  const locationGroups = [...new Set(locationResult[0].map((row) => String(row.country_code)))]
+    .map((countryCode) => {
+      const rows = locationResult[0].filter((row) => row.country_code === countryCode);
+      const totalVotes = rows.reduce((sum, row) => sum + Number(row.vote_count), 0);
+      return {
+        countryCode,
+        label: countryName(countryCode),
+        totalVotes,
+        optionVotes: distributionRows.map((option) => {
+          const voteCount = Number(rows.find((row) => Number(row.option_id) === Number(option.id))?.vote_count ?? 0);
+          return {
+            optionId: Number(option.id),
+            voteCount,
+            percentage: safePercentage(voteCount, totalVotes),
+          };
+        }),
+      };
+    })
+    .sort((a, b) => b.totalVotes - a.totalVotes)
+    .slice(0, 8);
 
   const sentiment = sentimentResult[0][0] ?? {};
   return {
@@ -137,9 +205,20 @@ async function getPollAnalyticsUncached(pollId: number): Promise<PollAnalytics> 
     voteDistribution: distributionRows.map((row) => ({ optionId: Number(row.id), optionText: row.option_text, voteCount: Number(row.vote_count), percentage: safePercentage(Number(row.vote_count), totalVotes) })),
     timeline: { granularity, points: fillTimelineIntervals(timelineResult[0].map((row) => ({ period: row.period, voteCount: Number(row.vote_count) })), createdAt, granularity) },
     audience: {
-      age: { items: knownAge < 10 ? [] : ageResult[0].map((row) => ({ ageGroup: row.age_group, label: String(row.age_group).replace("under_18", "Under 18").replace("55_plus", "55+").replace("_", "–"), count: Number(row.voter_count), percentage: safePercentage(Number(row.voter_count), knownAge) })), coverage: { knownCount: knownAge, totalCount: allVoters, coveragePercentage: safePercentage(knownAge, allVoters) }, isPrivate: knownAge < 10 },
-      locations: groupTopLocations(audienceItems(locationResult[0], countryName)),
-      devices: deviceItems,
+      age: {
+        groups: knownAge < 10 ? [] : ageGroups,
+        options: distributionRows.map((row) => ({ optionId: Number(row.id), optionText: row.option_text })),
+        coverage: { knownCount: knownAge, totalCount: allVoters, coveragePercentage: safePercentage(knownAge, allVoters) },
+        isPrivate: knownAge < 10,
+      },
+      locations: {
+        groups: locationGroups,
+        options: distributionRows.map((row) => ({ optionId: Number(row.id), optionText: row.option_text })),
+      },
+      devices: {
+        groups: deviceGroups,
+        options: distributionRows.map((row) => ({ optionId: Number(row.id), optionText: row.option_text })),
+      },
     },
     sentiment: { positive: Number(sentiment.positive ?? 0), neutral: Number(sentiment.neutral ?? 0), negative: Number(sentiment.negative ?? 0), analyzedReasons: Number(sentiment.analyzed_reasons ?? 0), totalReasons: Number(sentiment.total_reasons ?? 0) },
     insights: aiEnabled ? insights : null,
@@ -153,7 +232,7 @@ async function getPollAnalyticsUncached(pollId: number): Promise<PollAnalytics> 
 export function getPollAnalytics(pollId: number): Promise<PollAnalytics> {
   return unstable_cache(
     () => getPollAnalyticsUncached(pollId),
-    [`poll-analytics-${pollId}`],
+    [`poll-analytics-v4-${pollId}`],
     { revalidate: 60, tags: [`poll-analytics:${pollId}`] },
   )();
 }

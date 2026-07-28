@@ -9,4 +9,8 @@ const pool = mysql.createPool({
     timezone: 'Z',
 });
 
+pool.pool.on("connection", (connection) => {
+    connection.query("SET time_zone = '+00:00'");
+});
+
 export default pool;

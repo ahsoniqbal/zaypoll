@@ -6,6 +6,7 @@ import { useEffect, useOptimistic, useState, useTransition } from "react";
 import { User } from "@/types/user.types";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { formatRelativeTime } from "@/lib/utils";
 
 export default function UserList({ users }: { users: User[] }) {
     const router = useRouter();
@@ -62,7 +63,7 @@ export default function UserList({ users }: { users: User[] }) {
                         <div className="text-sm">
                             <Link href={`/users/${u.id}`}><p className="font-medium">{u.userName}</p></Link>
                             <p className="text-xs text-muted-foreground">
-                                {new Date(u.createdAt).toLocaleString()}
+                                {formatRelativeTime(u.createdAt)}
                             </p>
                         </div>
 

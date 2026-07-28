@@ -59,6 +59,7 @@ CREATE TABLE polls (
     downvotes BIGINT DEFAULT 0,
     created_by BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NULL DEFAULT NULL,
 
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_polls_created_by (created_by),

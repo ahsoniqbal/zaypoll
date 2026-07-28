@@ -37,7 +37,7 @@ export default function PollResults({
                         {/* Progress */}
                         <div className={clsx(
                                 "absolute left-0 inset-y-0 transition-all duration-700 ease-out",
-                                isSelected ? "bg-primary/20" : "bg-muted"
+                                isSelected ? "bg-primary/20" : "bg-primary/20"
                             )}
                             style={{ width: animate ? `${percentage}%` : "0%" }}
                         />

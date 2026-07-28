@@ -11,6 +11,7 @@ import TopicSelector from "../topic/TopicSelector";
 import { AppButton } from "../AppButton";
 import {
   POLL_DESCRIPTION_MAX_LENGTH,
+  POLL_DURATION_OPTIONS,
   POLL_MAX_OPTIONS,
   POLL_MAX_TOPICS,
   POLL_MIN_OPTIONS,
@@ -185,16 +186,34 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
             maxTopics={POLL_MAX_TOPICS}
           />
 
+          <div className="space-y-2">
+            <label htmlFor="poll-duration" className="text-sm font-medium">
+              Poll duration
+            </label>
+            <select
+              id="poll-duration"
+              name="duration"
+              defaultValue="never"
+              className="w-full cursor-pointer rounded-xl border bg-background px-4 py-3 text-sm outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20"
+            >
+              {POLL_DURATION_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Submit */}
           <div className="flex justify-end pt-2">
 
             <AppButton
               type="submit"
               isLoading={isPending}
-              loadingText="Publishing..."
+              loadingText="Posting..."
               className="px-6"
             >
-              Create Poll
+              Post
             </AppButton>
 
           </div>

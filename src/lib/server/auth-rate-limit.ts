@@ -52,7 +52,7 @@ export async function consumeAuthRateLimit({
   // Keep the table bounded without adding cleanup work to every request.
   if (Math.random() < 0.02) {
     await pool.execute(
-      "DELETE FROM auth_rate_limits WHERE expires_at < NOW() LIMIT 500",
+      "DELETE FROM auth_rate_limits WHERE expires_at < UTC_TIMESTAMP() LIMIT 500",
     );
   }
 

@@ -350,6 +350,7 @@ export async function getUserPolls(
       p.upvotes,
       p.downvotes,
       p.created_at,
+      p.expires_at,
 
       u.followers_count,
       u.following_count,
@@ -417,6 +418,8 @@ export async function getUserPolls(
                 downvotes: row.downvotes,
                 userReaction: loggedInUserId ? (row.user_reaction ?? null) : null,
                 createdAt: new Date(row.created_at).toISOString(),
+                expiresAt: row.expires_at ? new Date(row.expires_at).toISOString() : null,
+                isExpired: row.expires_at != null && new Date(row.expires_at).getTime() <= Date.now(),
                 hasVoted: loggedInUserId ? row.user_voted_option_id != null : false,
                 userVoteOptionId: row.user_voted_option_id || null,
                 hasReason: loggedInUserId

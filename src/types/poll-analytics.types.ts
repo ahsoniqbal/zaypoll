@@ -22,7 +22,25 @@ export type DemographicCoverage = {
 };
 
 export type AudienceItem = { label: string; count: number; percentage: number };
-export type AgeAnalyticsItem = AudienceItem & { ageGroup: string };
+export type AgeOptionItem = { optionId: number; optionText: string };
+export type AgeGroupItem = {
+  ageGroup: string;
+  label: string;
+  totalVotes: number;
+  optionVotes: Array<{ optionId: number; voteCount: number }>;
+};
+export type LocationGroupItem = {
+  countryCode: string;
+  label: string;
+  totalVotes: number;
+  optionVotes: Array<{ optionId: number; voteCount: number; percentage: number }>;
+};
+export type DeviceGroupItem = {
+  deviceType: string;
+  label: string;
+  totalVotes: number;
+  optionVotes: Array<{ optionId: number; voteCount: number; percentage: number }>;
+};
 
 export type PollInsight = {
   summary: string;
@@ -52,9 +70,20 @@ export type PollAnalytics = {
   voteDistribution: VoteDistributionItem[];
   timeline: { granularity: TimelineGranularity; points: VoteTimelinePoint[] };
   audience: {
-    age: { items: AgeAnalyticsItem[]; coverage: DemographicCoverage; isPrivate: boolean };
-    locations: AudienceItem[];
-    devices: AudienceItem[];
+    age: {
+      groups: AgeGroupItem[];
+      options: AgeOptionItem[];
+      coverage: DemographicCoverage;
+      isPrivate: boolean;
+    };
+    locations: {
+      groups: LocationGroupItem[];
+      options: AgeOptionItem[];
+    };
+    devices: {
+      groups: DeviceGroupItem[];
+      options: AgeOptionItem[];
+    };
   };
   sentiment: {
     positive: number;

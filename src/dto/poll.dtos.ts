@@ -15,6 +15,8 @@ export type PollListingDto = {
     downvotes: number;
     userReaction: 1 | -1 | null;
     createdAt: Date | string;
+    expiresAt: string | null;
+    isExpired: boolean;
     hasVoted: boolean;
     userVoteOptionId: number | null;
     hasReason: boolean;
@@ -45,6 +47,8 @@ export type PollDetailsDto = {
     downvotes: number;
     userReaction: 1 | -1 | null;
     createdAt: Date | string;
+    expiresAt: string | null;
+    isExpired: boolean;
     hasVoted: boolean;
     userVoteOptionId: number | null;
 
@@ -72,6 +76,7 @@ export type CreatePollDto = {
     options: string[];
     createdBy: number;
     topicIds: number[];
+    expiresAt: Date | null;
 }
 
 

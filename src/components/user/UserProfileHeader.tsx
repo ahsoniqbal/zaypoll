@@ -5,7 +5,7 @@ import FollowStats from "./FollowStats";
 import UserStatsSection from "./UserStatsSection";
 import { Suspense } from "react";
 import EditProfileModal from "./EditProfileModal";
-import { getInitials } from "@/lib/utils";
+import { formatRelativeTime, getInitials } from "@/lib/utils";
 
 type Props = {
   user: UserDetails;
@@ -90,10 +90,7 @@ export default function UserProfileHeader({
       </div>
 
       <p className="mt-2 pt-2 text-xs text-muted-foreground sm:ml-[7.25rem]">
-        Joined {new Date(user.joinedOn).toLocaleDateString("en", {
-          month: "long",
-          year: "numeric",
-        })}
+        Joined {formatRelativeTime(user.joinedOn)}
       </p>
     </section>
   );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { formatDistanceToNow } from "date-fns";
+import { formatRelativeTime } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
 
 type Props = {
@@ -25,7 +25,7 @@ export default function PollHeader({ username, name, image, createdAt }: Props) 
             <div className="min-w-0 leading-5">
                 <Link href={`/user/${username}`} className="block truncate text-sm font-medium text-foreground hover:underline">{name}</Link>
                 <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
+                    {formatRelativeTime(createdAt)}
                 </p>
             </div>
         </div>

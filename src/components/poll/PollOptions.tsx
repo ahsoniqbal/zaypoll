@@ -11,13 +11,14 @@ type Props = {
     totalVotes: number;
     selectedOption: number | null;
     onSelect: (id: number) => void;
+    isExpired?: boolean;
 }
-export default function PollOptions({ options, hasVoted, userVoteOptionId, totalVotes, selectedOption, onSelect }: Props) {
+export default function PollOptions({ options, hasVoted, userVoteOptionId, totalVotes, selectedOption, onSelect, isExpired = false }: Props) {
 
     return (
 
         <div className="space-y-3 mt-3" onClick={(e) => e.stopPropagation()}>
-            {hasVoted ? (
+            {hasVoted || isExpired ? (
                 <PollResults
                     options={options}
                     totalVotes={totalVotes}

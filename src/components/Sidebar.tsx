@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   LucideIcon,
+  PlusSquare,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -134,8 +135,8 @@ export default function Sidebar({
         )}
       >
         {/* Navigation Card */}
-        <Card className="p-2">
-          <CardContent className="p-0 flex flex-col gap-1">
+        <Card className="p-3">
+          <CardContent className="flex flex-col gap-2 p-0">
             {navItems.map((item) => {
               const Icon = item.icon;
 
@@ -166,14 +167,14 @@ export default function Sidebar({
                     )
                   }}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                    "flex items-center gap-2 rounded-lg px-3 py-2 font-medium transition-colors",
                     isActive
-                      ? "bg-primary text-primary-foreground font-medium"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      ? "bg-accent text-foreground font-semibold"
+                      : "hover:bg-muted hover:text-foreground"
                   )}
-                  
+
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-5 h-5 shrink-0" />
 
                   <span>{item.name}</span>
 
@@ -193,10 +194,11 @@ export default function Sidebar({
             {/* Create Poll */}
             <AppButton
               onClick={handleCreatePollClick}
-              className="mt-3 w-full gap-2">
-              <PlusCircle size={18} />
+              className="mt-3 w-full gap-1.5">
+              <PlusSquare size={18} />
               Create
             </AppButton>
+           
           </CardContent>
         </Card>
 
@@ -204,7 +206,7 @@ export default function Sidebar({
         <div className="px-2 text-xs leading-5 text-muted-foreground">
           <Link href="/explore" className="hover:text-foreground">Explore topics</Link>
           <span className="mx-1.5">·</span>
-          © {new Date().getFullYear()} Zaypoll
+          © {new Date().getUTCFullYear()} Zaypoll
         </div>
       </aside>
 

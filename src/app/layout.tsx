@@ -11,6 +11,11 @@ export const metadata: Metadata = {
     template: "%s | Zaypoll",
   },
   description: "Explore public polls, compare opinions, and discuss the reasons behind every vote.",
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({

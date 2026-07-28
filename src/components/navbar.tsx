@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -40,10 +41,17 @@ export default function Navbar({
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/90 backdrop-blur-lg">
       <div className="mx-auto flex h-16 w-full max-w-[96rem] items-center gap-4 px-4 md:px-8">
-
         {/* LEFT */}
         <div className="flex shrink-0 items-center gap-2 md:w-40">
-          <Link href="/" className="rounded-md focus-visible:ring-2 focus-visible:ring-ring">
+          <Link href="/" className="flex items-center gap-2 rounded-md focus-visible:ring-2 focus-visible:ring-ring">
+            <Image
+              src="/icon.png"
+              alt=""
+              width={34}
+              height={34}
+              priority
+              className="size-8 rounded-lg"
+            />
             <span className="text-xl font-semibold tracking-tight">Zay<span className="text-primary">poll</span></span>
           </Link>
         </div>

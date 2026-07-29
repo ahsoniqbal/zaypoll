@@ -25,7 +25,7 @@ export default function PollList(props: Props) {
   } = props;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* <CreatePollButton isLoggedIn={isUserLoggedIn} /> */}
 
       {/* <div>

@@ -79,13 +79,13 @@ export default function CommentReactions({
     };
 
     return (
-        <div className="flex items-center gap-1 ">
+        <div className="inline-flex items-center rounded-full border bg-background p-0.5 shadow-xs">
 
             {/* ✅ Upvote */}
             <button type="button" onClick={() => handleReaction(1)}
                 aria-label="Upvote reason"
                 aria-pressed={state.reaction === 1}
-                className={`flex items-center justify-center h-7 w-7 rounded-full transition-all
+                className={`flex h-7 w-7 cursor-pointer items-center justify-center rounded-full transition-all
                 ${state.reaction === 1
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:bg-muted hover:text-primary"}
@@ -106,7 +106,7 @@ export default function CommentReactions({
             <button type="button" onClick={() => handleReaction(-1)}
                 aria-label="Downvote reason"
                 aria-pressed={state.reaction === -1}
-                className={`flex items-center justify-center h-7 w-7 rounded-full transition-all
+                className={`flex h-7 w-7 cursor-pointer items-center justify-center rounded-full transition-all
                 ${state.reaction === -1
                         ? "bg-muted text-foreground"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"}

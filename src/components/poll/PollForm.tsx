@@ -15,7 +15,6 @@ import {
   POLL_MAX_OPTIONS,
   POLL_MAX_TOPICS,
   POLL_MIN_OPTIONS,
-  POLL_MIN_TOPICS,
   POLL_OPTION_MAX_LENGTH,
   POLL_TITLE_MAX_LENGTH,
 } from "@/types/constants";
@@ -68,11 +67,6 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
       return;
     }
 
-    if (selectedTopics.length < POLL_MIN_TOPICS) {
-      toast.error("Select at least one topic");
-      return;
-    }
-
     if (selectedTopics.length > POLL_MAX_TOPICS) {
       toast.error(`You can select up to ${POLL_MAX_TOPICS} topics`);
       return;
@@ -117,7 +111,7 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
               placeholder="Title your poll"
               required
               maxLength={POLL_TITLE_MAX_LENGTH}
-              className="w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20"
+              className="w-full rounded-xl border bg-background px-4 py-3 outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20 placeholder:font-semibold text-base font-semibold leading-snug text-foreground"
             />
           </div>
 

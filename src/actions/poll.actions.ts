@@ -13,7 +13,6 @@ import {
     POLL_MAX_OPTIONS,
     POLL_MAX_TOPICS,
     POLL_MIN_OPTIONS,
-    POLL_MIN_TOPICS,
     POLL_OPTION_MAX_LENGTH,
     POLL_TITLE_MAX_LENGTH,
     type PollDuration,
@@ -81,10 +80,8 @@ export async function createPollAction(
             throw new AppError("Poll options must be unique");
         }
 
-        if (topicIds.length < POLL_MIN_TOPICS || topicIds.length > POLL_MAX_TOPICS) {
-            throw new AppError(
-                `Poll must have between ${POLL_MIN_TOPICS} and ${POLL_MAX_TOPICS} topics`
-            );
+        if (topicIds.length > POLL_MAX_TOPICS) {
+            throw new AppError(`Poll can have up to ${POLL_MAX_TOPICS} topics`);
         }
 
         if (topicIds.some((topicId) => !Number.isSafeInteger(topicId) || topicId <= 0)) {
@@ -101,20 +98,21 @@ export async function createPollAction(
             ? null
             : new Date(Date.now() + durationHours * 60 * 60 * 1000);
 
-        const placeholders = topicIds.map(() => "?").join(", ");
-        const [topicRows] = await pool.query<(RowDataPacket & { count: number })[]>(
-            `
-                SELECT COUNT(*) AS count
-                FROM topics
-                WHERE id IN (${placeholders})
-                  AND parent_id IS NULL
-                  AND is_active = 1
-            `,
-            topicIds
-        );
+        if (topicIds.length > 0) {
+            const placeholders = topicIds.map(() => "?").join(", ");
+            const [topicRows] = await pool.query<(RowDataPacket & { count: number })[]>(
+                `
+                    SELECT COUNT(*) AS count
+                    FROM topics
+                    WHERE id IN (${placeholders})
+                      AND is_active = 1
+                `,
+                topicIds
+            );
 
-        if (Number(topicRows[0]?.count ?? 0) !== topicIds.length) {
-            throw new AppError("One or more selected topics are unavailable");
+            if (Number(topicRows[0]?.count ?? 0) !== topicIds.length) {
+                throw new AppError("One or more selected topics are unavailable");
+            }
         }
 
         const pollId = await createPoll({

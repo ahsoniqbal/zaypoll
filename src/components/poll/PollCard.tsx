@@ -13,7 +13,7 @@ import ReasonComposer from "./ReasonComposer";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { usePollExpiry } from "@/hooks/usePollExpiry";
 import PollExpiryStatus from "./PollExpiryStatus";
-
+import { formatCompactNumber } from "@/lib/utils";
 
 type Props = {
     poll: PollListingDto;
@@ -35,6 +35,9 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
     const [serverExpired, setServerExpired] = useState(false);
     const hasReachedExpiry = usePollExpiry(poll.expiresAt, poll.isExpired);
     const isExpired = serverExpired || hasReachedExpiry;
+    const showReasonComposer =
+        !isExpired &&
+        (!isUserLoggedIn || (hasVoted && userVoteOptionId != null && !hasReason));
 
     const onClickVoteButton = async () => {
         if (!selectedOption || isPending || hasVoted || isExpired) return;
@@ -88,9 +91,9 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
         }
 
     }
-
+    // hover:-translate-y-px
     return (
-        <article className="surface-card cursor-pointer p-4 transition-all hover:-translate-y-px hover:ring-primary/20 hover:shadow-md sm:p-5"
+        <article className="surface-card cursor-pointer transition-all hover:ring-primary/20 hover:shadow-md p-3 sm:p-3"
             onClick={(e) => {
                 const target = e.target as HTMLElement;
                 if (target.closest("input, button, textarea, a, label")) return; //Ignore clicks on interactive elements
@@ -104,7 +107,6 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                 image={poll.user.image}
                 createdAt={poll.createdAt}
             />
-            <PollExpiryStatus expiresAt={poll.expiresAt} isExpired={isExpired} />
 
             <div className="mb-4 mt-3">
                 {poll.title && (
@@ -124,22 +126,46 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                 onSelect={setSelectedOption}
                 isExpired={isExpired}
             />
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-medium">
+                <span
+                    className="tabular-nums"
+                    title={`${totalVotes.toLocaleString()} ${totalVotes === 1 ? "vote" : "votes"}`}
+                >
+                    {formatCompactNumber(totalVotes)} {totalVotes === 1 ? "vote" : "votes"}
+                </span>
+                {poll.expiresAt && (
+                    <>
+                        <span aria-hidden="true">
+                            &middot;
+                        </span>
+                        <PollExpiryStatus expiresAt={poll.expiresAt} isExpired={isExpired} />
+                    </>
+                )}
+            </div>
 
-            {!isExpired && <div className="mt-3" onClick={(event) => event.stopPropagation()}>
-                <ReasonComposer
-                    pollId={poll.pollId}
-                    optionId={userVoteOptionId}
-                    optionText={options.find((option) => option.id === userVoteOptionId)?.optionText}
-                    isUserLoggedIn={isUserLoggedIn}
-                    hasVoted={hasVoted}
-                    hasReason={hasReason}
-                    onReasonAdded={() => setHasReason(true)}
-                />
-            </div>}
+            {showReasonComposer && (
+                <div
+                    className="mx-auto my-4 w-full"
+                    onClick={(event) => event.stopPropagation()}
+                >
+                    <ReasonComposer
+                        pollId={poll.pollId}
+                        optionId={userVoteOptionId}
+                        optionText={options.find((option) => option.id === userVoteOptionId)?.optionText}
+                        isUserLoggedIn={isUserLoggedIn}
+                        hasVoted={hasVoted}
+                        hasReason={hasReason}
+                        onReasonAdded={() => setHasReason(true)}
+                    />
+                </div>
+            )}
 
-            {/* Likes + comments + vote button */}
-            <div className="mt-4 flex items-center justify-between border-t pt-3">
-                <div className="flex items-center gap-1">
+            {/* Reactions, reasons and vote button */}
+            <div
+                className="mt-3 flex min-h-9 items-center justify-between gap-3 border-t pt-3"
+                onClick={(event) => event.stopPropagation()}
+            >
+                <div className="flex h-8 items-center gap-2">
                     <PollReactions
                         pollId={poll.pollId}
                         upvotes={poll.upvotes}
@@ -147,32 +173,23 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                         userVote={poll.userReaction}
                         isUserLoggedIn={isUserLoggedIn}
                     />
-                    <PollCommentButton pollId={poll.pollId} reasonCount={poll.reasonCount} />
 
+                    <PollCommentButton
+                        pollId={poll.pollId}
+                        reasonCount={poll.reasonCount}
+                    />
                 </div>
 
-                <div onClick={(e) => e.stopPropagation()} >
-                    {/* <Button type="button" size="sm" className="rounded-full disabled:opacity-50 hover:shadow-sm active:scale-[0.98] transition-transform disabled:cursor-not-allowed"
-                        disabled={!selectedOption || isPending || hasVoted || isExpired}
-                        onClick={onClickVoteButton}
-                    >
-                        {isPending ? "Voting..." : "Vote"}
-                    </Button> */}
-
-                    <AppButton
-                        // size="sm"
-                        onClick={onClickVoteButton}
-                        disabled={!selectedOption || isPending || hasVoted}
-                        isLoading={isPending}
-                        loadingText="Voting..."
-                    >
-                        {isExpired ? "Poll ended" : "Vote"}
-                    </AppButton>
-
-
-
-                </div>
-
+                <AppButton
+                    size="sm"
+                    className="h-8 shrink-0 px-4"
+                    onClick={onClickVoteButton}
+                    disabled={!selectedOption || isPending || hasVoted || isExpired}
+                    isLoading={isPending}
+                    loadingText="Voting..."
+                >
+                    {isExpired ? "Poll ended" : "Vote"}
+                </AppButton>
             </div>
 
         </article>

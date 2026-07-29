@@ -23,7 +23,7 @@ function TopicItem({ topic }: { topic: TopicDto }) {
             topic.name.slice(0, 1).toUpperCase()
           )}
         </span>
-        <span className="min-w-0 truncate font-medium group-hover/topic:text-primary">
+        <span className="min-w-0 truncate font-medium">
           {topic.name}
         </span>
       </Link>

@@ -43,9 +43,9 @@ export default function PollVoting({ options, selectedOption, onSelect }: Props)
                 );
             })}
             
-<p className="mb-1 text-xs text-muted-foreground">
+{/* <p className="mb-1 text-xs text-muted-foreground">
     Select an option to vote
-  </p>
+  </p> */}
 
         </fieldset>
 

@@ -3,6 +3,7 @@
 import { PollOptionDto } from "@/dto/poll.dtos";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
+import { CheckCheck } from "lucide-react";
 
 type Props = {
     options: PollOptionDto[];
@@ -31,14 +32,15 @@ export default function PollResults({
                         : 0;
 
                 const isSelected = opt.id === userVoteOptionId;
-
+// rounded-lg border bg-background
+                
                 return (
-                    <div key={opt.id} className="group relative w-full overflow-hidden rounded-lg border bg-background p-3">
+                    <div key={opt.id} className="group relative w-full overflow-hidden p-3">
                         {/* Progress */}
                         <div className={clsx(
-                                "absolute left-0 inset-y-0 transition-all duration-700 ease-out",
-                                isSelected ? "bg-primary/20" : "bg-primary/20"
-                            )}
+                            "absolute left-0 inset-y-0 transition-all duration-700 ease-out rounded-md",
+                            isSelected ? "bg-primary/20" : "bg-primary/20"
+                        )}
                             style={{ width: animate ? `${percentage}%` : "0%" }}
                         />
 
@@ -49,12 +51,15 @@ export default function PollResults({
                             //     isSelected ? "text-white font-semibold" : "text-gray-800"
                             // )}
                             >
-                                {isSelected ? (
+                                {/* {isSelected ? (
                                     <span className="w-4 h-4 rounded-full border-2 border-primary bg-background flex items-center justify-center">
                                         <span className="w-2 h-2 rounded-full bg-primary"></span>
                                     </span>
-                                ) : (<span className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></span>)}
-                                {opt.optionText}
+                                ) : (<span className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></span>)} */}
+                                {isSelected ? <>
+                                    {opt.optionText}
+                                    <CheckCheck className="w-4 h-4 text-primary" />
+                                </> : opt.optionText}
                             </span>
 
                             <span
@@ -71,9 +76,9 @@ export default function PollResults({
             })}
 
             {/* Total */}
-            <div className="text-xs tabular-nums text-muted-foreground">
+            {/* <div className="text-xs tabular-nums text-muted-foreground">
                 {totalVotes} {totalVotes === 1 ? "vote" : "votes"}
-            </div>
+            </div> */}
         </div>
     );
 }

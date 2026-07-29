@@ -80,44 +80,42 @@ export default function PollReactions({
             }
         });
     };
-
+    const netVotes = state.upvotes - state.downvotes;
     return (
-        <div className="flex items-center gap-1 rounded-full bg-slate-200/50 p-0.5">
-
+        <div className="inline-flex h-8 items-center rounded-full border bg-background p-0.5">
             <button
                 type="button"
                 aria-label="Upvote poll"
                 aria-pressed={state.reaction === 1}
-                onClick={(e) => handleReaction(e, 1)}
-                className={`flex items-center justify-center h-8 w-8 rounded-full transition-all
-                ${state.reaction === 1
-                        ? "bg-primary/15 text-primary"
-                        : "hover:bg-background hover:text-primary"} `}
+                onClick={(event) => handleReaction(event, 1)}
+                className={`flex size-7 items-center justify-center rounded-full transition-colors ${state.reaction === 1
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground hover:bg-muted hover:text-primary"
+                    }`}
             >
-                <ArrowBigUp className="w-5 h-5" />
+                <ArrowBigUp className="size-4" aria-hidden="true" />
             </button>
- 
+
             <span
-                className="min-w-3 text-center text-sm font-medium tabular-nums"
-                title={(state.upvotes - state.downvotes).toLocaleString()}
-                aria-label={`${state.upvotes - state.downvotes} net votes`}
+                className="min-w-3 text-center text-xs font-semibold leading-none tabular-nums"
+                title={netVotes.toLocaleString()}
+                aria-label={`${netVotes} net votes`}
             >
-                {formatCompactNumber(state.upvotes - state.downvotes)}
+                {formatCompactNumber(netVotes)}
             </span>
 
             <button
                 type="button"
                 aria-label="Downvote poll"
                 aria-pressed={state.reaction === -1}
-                onClick={(e) => handleReaction(e, -1)}
-                className={`flex items-center justify-center h-8 w-8 rounded-full transition-all
-            ${state.reaction === -1
-                        ? "bg-blue-600/15 text-blue-600"
-                        : "hover:bg-background hover:text-blue-400"}`}
+                onClick={(event) => handleReaction(event, -1)}
+                className={`flex size-7 items-center justify-center rounded-full transition-colors ${state.reaction === -1
+                        ? "bg-blue-600/10 text-blue-600"
+                        : "text-foreground hover:bg-muted hover:text-blue-600"
+                    }`}
             >
-                <ArrowBigDown className="w-5 h-5" />
+                <ArrowBigDown className="size-4" aria-hidden="true" />
             </button>
-
         </div>
 
     );

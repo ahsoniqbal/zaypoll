@@ -14,6 +14,7 @@ import type { AnalyticsTab, PollAnalytics } from "@/types/poll-analytics.types";
 import PollDetailTabs from "./PollDetailTabs";
 import { usePollExpiry } from "@/hooks/usePollExpiry";
 import PollExpiryStatus from "./PollExpiryStatus";
+import { formatCompactNumber } from "@/lib/utils";
 
 type Props = {
     poll: PollListingDto;
@@ -33,6 +34,8 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
 
     const [hasVoted, setHasVoted] = useState(poll.hasVoted);
     const [userVoteOptionId, setUserVoteOptionId] = useState<number | null>(poll.userVoteOptionId); //option id after showing results
+    const [options, setOptions] = useState(poll.options);
+    const [totalVotes, setTotalVotes] = useState(poll.totalVotes);
 
     const router = useRouter();
     const [hasReason, setHasReason] = useState(poll.hasReason);
@@ -55,6 +58,14 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
         if (result.success) {
             setHasVoted(true);
             setUserVoteOptionId(selectedOption);
+            setOptions((previous) =>
+                previous.map((option) =>
+                    option.id === selectedOption
+                        ? { ...option, voteCount: option.voteCount + 1 }
+                        : option
+                )
+            );
+            setTotalVotes((previous) => previous + 1);
             setSelectedOption(null);
         } else if (result.message.toLowerCase().includes("poll has ended")) {
             setServerExpired(true);
@@ -62,7 +73,7 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
     }
 
     return (
-        <article className={`surface-card p-4 sm:p-6 ${!isDetailView ? "cursor-pointer transition-all hover:-translate-y-px hover:ring-primary/20 hover:shadow-md" : ""}`}
+        <article className={`surface-card p-3 sm:p-3 ${!isDetailView ? "cursor-pointer transition-all hover:-translate-y-px hover:ring-primary/20 hover:shadow-md" : ""}`}
             onClick={(e) => {
                 if (isDetailView) return;
                 const target = e.target as HTMLElement;
@@ -77,8 +88,6 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
                 image={poll.user.image}
                 createdAt={poll.createdAt}
             />
-            <PollExpiryStatus expiresAt={poll.expiresAt} isExpired={isExpired} />
-
             <div className="mt-3 mb-4">
                 {poll.title && (
                     <h1 className="mb-1 text-lg font-semibold leading-snug text-foreground">{poll.title}</h1>
@@ -89,18 +98,36 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
             </div>
 
             <PollOptions
-                options={poll.options}
+                options={options}
                 hasVoted={hasVoted}
                 userVoteOptionId={userVoteOptionId}
-                totalVotes={poll.totalVotes}
+                totalVotes={totalVotes}
                 selectedOption={selectedOption}
                 onSelect={setSelectedOption}
                 isExpired={isExpired}
             />
 
+
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-medium">
+                <span
+                    className="tabular-nums"
+                    title={`${totalVotes.toLocaleString()} ${totalVotes === 1 ? "vote" : "votes"}`}
+                >
+                    {formatCompactNumber(totalVotes)} {totalVotes === 1 ? "vote" : "votes"}
+                </span>
+                {poll.expiresAt && (
+                    <>
+                        <span aria-hidden="true">
+                            &middot;
+                        </span>
+                        <PollExpiryStatus expiresAt={poll.expiresAt} isExpired={isExpired} />
+                    </>
+                )}
+            </div>
+
             {/* Likes + comments + vote button */}
             <div className="mt-4 flex items-center justify-between border-t pt-3">
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                     <PollReactions
                         pollId={poll.pollId}
                         upvotes={poll.upvotes}
@@ -127,7 +154,7 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
                         // variant="ghost"
                         // size="sm"
                         onClick={onClickVoteButton}
-                        disabled={!selectedOption || isPending || hasVoted}
+                        disabled={!selectedOption || isPending || hasVoted || isExpired}
                         isLoading={isPending}
                         loadingText="Voting..."
                     >

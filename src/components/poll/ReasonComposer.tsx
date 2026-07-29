@@ -29,7 +29,7 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
         type="button"
         onClick={open}
         variant="outline"
-        className="w-full justify-start rounded-2xl text-left text-muted-foreground font-medium hover:cursor-pointer"
+        className="w-full justify-center rounded-xl text-center font-medium text-muted-foreground hover:cursor-pointer"
       >
         Add a reason (optional)
       </Button>
@@ -72,14 +72,14 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
         type="button"
         onClick={() => setIsOpen(true)}
         variant="outline"
-        className="w-full justify-start text-left rounded-2xl px-4 py-2 text-muted-foreground font-medium cursor-pointer h-auto">
+        className="h-auto w-full cursor-pointer justify-center rounded-xl px-4 py-2 text-center font-medium text-muted-foreground">
         Add a reason
       </Button>
     );
   }
 
   return (
-    <div className="group relative rounded-md border border-input bg-background focus-within:ring-1 focus-within:ring-ring focus-within:border-primary overflow-hidden">
+    <div className="group relative w-full overflow-hidden rounded-xl border border-input bg-background focus-within:border-primary focus-within:ring-1 focus-within:ring-ring">
       <Textarea
         id={`reason-${pollId}`}
         aria-label={optionText ? `Why did you choose ${optionText}?` : "Why did you choose this option?"}

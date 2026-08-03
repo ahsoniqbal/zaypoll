@@ -17,7 +17,10 @@ export default function PollOptions({ options, hasVoted, userVoteOptionId, total
 
     return (
 
-        <div className="space-y-3 mt-3" onClick={(e) => e.stopPropagation()}>
+        <div
+            className="mt-3 space-y-3"
+            onClick={hasVoted || isExpired ? undefined : (event) => event.stopPropagation()}
+        >
             {hasVoted || isExpired ? (
                 <PollResults
                     options={options}

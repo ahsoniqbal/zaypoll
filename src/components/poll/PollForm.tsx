@@ -111,7 +111,7 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
               placeholder="Title your poll"
               required
               maxLength={POLL_TITLE_MAX_LENGTH}
-              className="w-full rounded-xl border bg-background px-4 py-3 outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20 placeholder:font-semibold text-base font-semibold leading-snug text-foreground"
+              className="w-full rounded-xl border bg-background px-4 py-3 outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 placeholder:font-semibold text-base font-semibold leading-snug text-foreground"
             />
           </div>
 
@@ -125,7 +125,7 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
               placeholder="Body text (optional)"
               rows={4}
               maxLength={POLL_DESCRIPTION_MAX_LENGTH}
-              className="w-full resize-none rounded-xl border bg-background px-4 py-3 text-sm outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20"
+              className="w-full resize-none rounded-xl border bg-background px-4 py-3 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             />
           </div>
 
@@ -141,7 +141,7 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
                   required
                   maxLength={POLL_OPTION_MAX_LENGTH}
                   aria-label={`Option ${index + 1}`}
-                  className="min-w-0 flex-1 rounded-xl border bg-background px-3 py-2.5 text-sm outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20"
+                  className="min-w-0 flex-1 rounded-xl border bg-background px-3 py-2.5 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 />
 
                 {options.length > 2 && (

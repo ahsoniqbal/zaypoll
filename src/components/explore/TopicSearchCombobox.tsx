@@ -72,7 +72,7 @@ export default function TopicSearchCombobox({ topics }: Props) {
         aria-expanded={showResults}
         aria-controls="topic-search-results"
         aria-activedescendant={activeIndex >= 0 ? `topic-result-${results[activeIndex]?.id}` : undefined}
-        className="h-12 w-full rounded-xl border bg-background pl-12 pr-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+        className="h-12 w-full rounded-xl border bg-background pl-12 pr-4 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
       />
 
       {showResults && (

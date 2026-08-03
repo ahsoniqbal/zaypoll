@@ -116,7 +116,7 @@ export default function TopicSelector({
           aria-autocomplete="list"
           aria-expanded={showSuggestions}
           aria-controls="topic-suggestions"
-          className="w-full rounded-xl border bg-background py-3 pl-9 pr-4 text-sm outline-none transition placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/20 disabled:cursor-not-allowed disabled:bg-muted/40"
+          className="w-full rounded-xl border bg-background py-3 pl-9 pr-4 text-sm outline-none transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-muted/40"
         />
 
         {showSuggestions && (

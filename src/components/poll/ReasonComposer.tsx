@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { type ChangeEvent, useRef, useState } from "react";
 import { addReasonAction } from "@/actions/poll.actions";
-import { toast } from "react-hot-toast/headless";
+import toast from "react-hot-toast";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
@@ -14,14 +14,22 @@ type Props = {
   isUserLoggedIn: boolean;
   hasVoted: boolean;
   hasReason: boolean;
-  alwaysExpanded?: boolean;
   onReasonAdded?: (optionId: number) => void | Promise<void>;
 };
 
-export default function ReasonComposer({ pollId, optionId, optionText, isUserLoggedIn, hasVoted, hasReason, alwaysExpanded = false, onReasonAdded }: Props) {
-  const [isOpen, setIsOpen] = useState(alwaysExpanded);
+export default function ReasonComposer({
+  pollId,
+  optionId,
+  optionText,
+  isUserLoggedIn,
+  hasVoted,
+  hasReason,
+  onReasonAdded,
+}: Props) {
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { open } = useAuthModal();
 
   if (!isUserLoggedIn) {
@@ -39,9 +47,16 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
 
   if (!hasVoted || !optionId || hasReason) return null;
 
-  const resetComposer = () => {
-    setReason("");
-    setIsOpen(false);
+  const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    setReason(event.target.value);
+    event.target.style.height = "auto";
+    event.target.style.height = `${event.target.scrollHeight}px`;
+  };
+
+  const resetHeight = () => {
+    requestAnimationFrame(() => {
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
+    });
   };
 
   const submit = async () => {
@@ -58,7 +73,10 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
       }
 
       toast.success(result.message);
-      resetComposer();
+      setReason("");
+      resetHeight();
+      setIsExiting(true);
+      await new Promise((resolve) => setTimeout(resolve, 200));
       void onReasonAdded?.(addedOptionId);
     } catch {
       toast.error("Could not add your reason. Please try again.");
@@ -67,54 +85,32 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
     }
   };
 
-  if (!isOpen) {
-    return (
-      <Button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        variant="outline"
-        className="h-auto w-full cursor-pointer rounded-xl px-4 py-2 text-center font-medium text-muted-foreground"
-      >
-        Add a reason
-      </Button>
-    );
-  }
-
   return (
-    <div className="group relative w-full overflow-hidden rounded-xl border border-input bg-background focus-within:border-primary focus-within:ring-1 focus-within:ring-ring">
+    <div className={`flex w-full items-center gap-2 rounded-4xl border border-input bg-background px-2 duration-200 motion-reduce:animate-none focus-within:border-ring focus-within:ring-[2px] focus-within:ring-ring/50 ${isExiting ? "animate-out fade-out-0 slide-out-to-top-2" : "animate-in fade-in-0 slide-in-from-top-2"}`}>
       <Textarea
+        ref={textareaRef}
         id={`reason-${pollId}`}
         aria-label={optionText ? `Why did you choose ${optionText}?` : "Why did you choose this option?"}
         value={reason}
-        onChange={(event) => setReason(event.target.value)}
+        rows={1}
+        onChange={handleChange}
         maxLength={150}
-        autoFocus={!alwaysExpanded}
         placeholder={optionText ? `Why did you choose “${optionText}”?` : "Why did you choose this option?"}
-        className={`min-h-15 w-full resize-y border-0 bg-transparent px-3 pb-12 pt-3 text-sm focus-visible:ring-0 focus-visible:ring-offset-0`}
+        disabled={isSubmitting || isExiting}
+        className="min-h-9 max-h-40 resize-none overflow-y-auto rounded-none border-0 bg-transparent px-2 py-2 text-sm shadow-none focus:border-transparent focus:ring-0 focus-visible:ring-0"
       />
-      
-      {/* Absolute overlay at the bottom of the container */}
-      <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-transparent pointer-events-auto">
-        <Button 
+
+      {reason.length > 0 && (
+        <Button
           type="button"
-          variant="ghost" 
-          size="sm" 
-          onClick={resetComposer} 
-          disabled={isSubmitting}
-          className="h-8 px-3 text-xs"
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="button"
-          size="sm" 
-          onClick={submit} 
+          size="sm"
+          onClick={submit}
           disabled={!reason.trim() || isSubmitting}
-          className="h-8 px-3 text-xs"
+          className="shrink-0 rounded-4xl"
         >
-          {isSubmitting ? "Submitting..." : "Submit reason"}
+          {isSubmitting ? "Posting..." : "Post"}
         </Button>
-      </div>
+      )}
     </div>
   );
 }

@@ -73,7 +73,7 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
     }
 
     return (
-        <article className={`surface-card p-3 sm:p-3 ${!isDetailView ? "cursor-pointer transition-all hover:-translate-y-px hover:ring-primary/20 hover:shadow-md" : ""}`}
+        <article className={`surface-card p-3 sm:p-3 ${!isDetailView ? "cursor-pointer transition-all hover:-translate-y-px hover:ring-foreground/15 hover:shadow-md" : ""}`}
             onClick={(e) => {
                 if (isDetailView) return;
                 const target = e.target as HTMLElement;
@@ -148,16 +148,18 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
                     </Button> */}
 
 
-                    <AppButton
-                        // variant="ghost"
-                        // size="sm"
-                        onClick={onClickVoteButton}
-                        disabled={!selectedOption || isPending || hasVoted || isExpired}
-                        isLoading={isPending}
-                        loadingText="Voting..."
-                    >
-                        {isExpired ? "Poll ended" : "Vote"}
-                    </AppButton>
+                    {!hasVoted && (
+                        <AppButton
+                            // variant="ghost"
+                            // size="sm"
+                            onClick={onClickVoteButton}
+                            disabled={!selectedOption || isPending || isExpired}
+                            isLoading={isPending}
+                            loadingText="Voting..."
+                        >
+                            {isExpired ? "Poll ended" : "Vote"}
+                        </AppButton>
+                    )}
                 </div>
 
             </div>

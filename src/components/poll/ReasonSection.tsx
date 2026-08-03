@@ -102,21 +102,17 @@ export default function ReasonSection({
     [
       "max-w-full whitespace-nowrap rounded-md border px-2.5 py-1.5",
       "inline-flex items-center",
-      "text-xs font-semibold text-foreground",
-      "cursor-pointer transition-colors hover:bg-secondary",
+      "text-md font-medium",
+      "cursor-pointer transition-colors",
       isSelected
-        ? "border-neutral-300 bg-secondary"
-        : "border-border bg-background",
+        ? "border-black bg-black/90 text-white"
+        : "border-border bg-background text-foreground hover:bg-secondary",
     ].join(" ");
 
   return (
     <section className="space-y-4">
 
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold">Reasons</h2>
-        </div>
+      <div className="flex flex-wrap justify-end gap-3">    
         <label className="flex cursor-pointer items-center gap-1 rounded-full border bg-background px-2 py-1 text-xs font-medium transition-colors hover:bg-muted/50 hover:text-foreground">
           <LucideSortDesc className="size-3.5" aria-hidden="true" />
           <span className="sr-only">Sort</span>
@@ -139,7 +135,6 @@ export default function ReasonSection({
         isUserLoggedIn={isUserLoggedIn}
         hasVoted={hasVoted}
         hasReason={hasReason}
-        alwaysExpanded
         onReasonAdded={refreshReasonCaches}
       />
 
@@ -237,10 +232,10 @@ export default function ReasonSection({
                         </span>
                         {selectedOptionId === ALL && (
                           <Badge
-                            variant="default"
+                            variant="outline"
                             title={selectedOption?.optionText ?? "Unknown option"}
                             aria-label={`Selected option: ${selectedOption?.optionText ?? "Unknown option"}`}
-                            className="max-w-28 border-primary/20 bg-primary/8 text-primary sm:max-w-36"
+                            className="max-w-40 border-black/60 bg-black/60 text-white sm:max-w-48"
                           >
                             <span className="truncate">
                               {selectedOption?.optionText ?? "Unknown option"}

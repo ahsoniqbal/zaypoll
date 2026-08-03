@@ -93,7 +93,7 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
     }
     // hover:-translate-y-px
     return (
-        <article className="surface-card cursor-pointer transition-all hover:ring-primary/20 hover:shadow-md p-3 sm:p-3"
+        <article className="surface-card cursor-pointer p-3 transition-all hover:ring-foreground/15 hover:shadow-md sm:p-3"
             onClick={(e) => {
                 const target = e.target as HTMLElement;
                 if (target.closest("input, button, textarea, a, label")) return; //Ignore clicks on interactive elements
@@ -146,7 +146,6 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
             {/* Reactions, reasons and vote button */}
             <div
                 className="mt-3 flex min-h-9 items-center justify-between gap-3 border-t pt-3"
-                onClick={(event) => event.stopPropagation()}
             >
                 <div className="flex h-8 items-center gap-2">
                     <PollReactions
@@ -163,16 +162,18 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                     />
                 </div>
 
-                <AppButton
-                    size="sm"
-                    className="h-8 shrink-0 px-4"
-                    onClick={onClickVoteButton}
-                    disabled={!selectedOption || isPending || hasVoted || isExpired}
-                    isLoading={isPending}
-                    loadingText="Voting..."
-                >
-                    {isExpired ? "Poll ended" : "Vote"}
-                </AppButton>
+                {!hasVoted && (
+                    <AppButton
+                        size="sm"
+                        className="h-8 shrink-0 px-4"
+                        onClick={onClickVoteButton}
+                        disabled={!selectedOption || isPending || isExpired}
+                        isLoading={isPending}
+                        loadingText="Voting..."
+                    >
+                        {isExpired ? "Poll ended" : "Vote"}
+                    </AppButton>
+                )}
             </div>
             {showReasonComposer && (
                 <div

@@ -4,7 +4,7 @@ import pool from "@/lib/db";
 import { AppError } from "@/lib/error";
 import { PagedResponse } from "@/types/common.types";
 import { DEFAULT_PAGE_LIMIT } from "@/types/constants";
-import { AgeGroup, User, UserDetails, UserRow } from "@/types/user.types";
+import { AgeGroup, Gender, ProfileCompletion, User, UserDetails, UserRow } from "@/types/user.types";
 import { ResultSetHeader } from "mysql2";
 import { UserData } from "next-auth/providers/42-school";
 import { createNotification } from "./notification.service";
@@ -37,6 +37,7 @@ export async function getUserDetails(
             u.followers_count,
             u.following_count,
             u.age_group,
+            u.gender,
             uf.following_id as is_following
         from users u
         left join user_follows uf 
@@ -63,23 +64,56 @@ export async function getUserDetails(
         followingCount: row.following_count,
         isFollowing: Boolean(row.is_following),
         ageGroup: row.age_group ?? null,
+        gender: row.gender ?? null,
     };
 }
 
 export async function updateUserProfile(
     userId: number,
-    profile: { name: string; ageGroup: AgeGroup | null }
+    profile: { name: string; ageGroup: AgeGroup; gender: Gender }
 ): Promise<void> {
     const [result] = await pool.execute<ResultSetHeader>(
         `UPDATE users
-         SET name = ?, age_group = ?
+         SET name = ?,
+             age_group = ?,
+             gender = ?,
+             profile_onboarding_prompted_at =
+               COALESCE(profile_onboarding_prompted_at, UTC_TIMESTAMP()),
+             profile_onboarding_dismissed_at = NULL
          WHERE id = ?`,
-        [profile.name, profile.ageGroup, userId]
+        [profile.name, profile.ageGroup, profile.gender, userId],
     );
+    if (result.affectedRows === 0) throw new AppError("User not found", 404);
+}
 
-    if (result.affectedRows === 0) {
-        throw new AppError("User not found", 404);
-    }
+export async function dismissProfileOnboarding(userId: number): Promise<void> {
+    const [result] = await pool.execute<ResultSetHeader>(
+        `UPDATE users
+         SET profile_onboarding_prompted_at =
+               COALESCE(profile_onboarding_prompted_at, UTC_TIMESTAMP()),
+             profile_onboarding_dismissed_at = UTC_TIMESTAMP()
+         WHERE id = ?`,
+        [userId],
+    );
+    if (result.affectedRows === 0) throw new AppError("User not found", 404);
+}
+
+export async function getProfileCompletion(userId: number): Promise<ProfileCompletion | null> {
+    const [rows] = await pool.query<UserRow[]>(
+        `SELECT name, age_group, gender, profile_onboarding_prompted_at
+         FROM users
+         WHERE id = ?
+         LIMIT 1`,
+        [userId],
+    );
+    if (!rows[0]) return null;
+    return {
+        name: rows[0].name,
+        ageGroup: rows[0].age_group ?? null,
+        gender: rows[0].gender ?? null,
+        hasBeenPrompted: rows[0].profile_onboarding_prompted_at != null,
+        isComplete: Boolean(rows[0].name?.trim() && rows[0].age_group && rows[0].gender),
+    };
 }
 
 export async function registerUser(user: CreateUserDto): Promise<User> {

@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import type { TopicDto } from "@/dto/category.dtos";
 import { getParentTopics } from "@/services/topic.service";
 import { Card, CardContent, CardHeader } from "./ui/card";
+import ProfileCompletionCard from "./profile/ProfileCompletionCard";
 
 const VISIBLE_TOPIC_COUNT = 5;
 
@@ -38,6 +39,7 @@ export default async function RightSidebar() {
 
   return (
     <aside className="sticky top-20 mt-4 hidden h-fit w-60 shrink-0 flex-col space-y-4 lg:flex">
+      <ProfileCompletionCard />
       <Card className="gap-0 py-0">
         <CardHeader className="border-b px-3 py-2.5">
           <h2 className="text-sm font-semibold">Main topics</h2>

@@ -2,10 +2,10 @@
 
 import { auth } from "@/auth";
 import { AppError } from "@/lib/error";
-import { createUser, deleteUser, toggleFollow, updateUser, updateUserProfile } from "@/services/user.services";
+import { createUser, deleteUser, dismissProfileOnboarding, toggleFollow, updateUser, updateUserProfile } from "@/services/user.services";
 import { ActionResponse } from "@/types/common.types";
 import { revalidatePath } from "next/cache";
-import type { AgeGroup } from "@/types/user.types";
+import { z } from "zod";
 
 
 
@@ -151,7 +151,15 @@ export async function getFollowingAction(userId: number) {
     return await getFollowing(userId);
 }
 
-const ageGroups = new Set<AgeGroup>(["under_18", "18_24", "25_34", "35_44", "45_54", "55_plus"]);
+const profileSchema = z.object({
+    name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be at most 100 characters"),
+    ageGroup: z.enum(["under_18", "18_24", "25_34", "35_44", "45_54", "55_plus"], {
+        error: "Select your age group",
+    }),
+    gender: z.enum(["woman", "man", "non_binary", "prefer_not_to_say"], {
+        error: "Select a gender option",
+    }),
+});
 
 export async function updateProfileAction(formData: FormData): Promise<ActionResponse> {
     const session = await auth();
@@ -161,27 +169,39 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
         return { success: false, message: "Please sign in to update your profile" };
     }
 
-    const name = String(formData.get("name") ?? "").trim();
-    const ageGroupValue = String(formData.get("ageGroup") ?? "").trim();
-    const ageGroup = ageGroupValue ? ageGroupValue as AgeGroup : null;
-
-    if (name.length < 2 || name.length > 100) {
-        return { success: false, message: "Name must be between 2 and 100 characters" };
-    }
-
-    if (ageGroup !== null && !ageGroups.has(ageGroup)) {
-        return { success: false, message: "Select a valid age range" };
+    const parsed = profileSchema.safeParse({
+        name: formData.get("name"),
+        ageGroup: formData.get("ageGroup"),
+        gender: formData.get("gender"),
+    });
+    if (!parsed.success) {
+        return { success: false, message: parsed.error.issues[0]?.message ?? "Check your profile details" };
     }
 
     try {
         await updateUserProfile(Number(userId), {
-            name,
-            ageGroup,
+            ...parsed.data,
         });
+        revalidatePath("/", "layout");
         revalidatePath("/user/[username]", "page");
         return { success: true, message: "Profile updated successfully" };
     } catch (error) {
         console.error("updateProfileAction error:", error);
         return { success: false, message: "We couldn't update your profile. Please try again." };
+    }
+}
+
+export async function dismissProfileOnboardingAction(): Promise<ActionResponse> {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return { success: false, message: "Please sign in to update your profile" };
+    }
+    try {
+        await dismissProfileOnboarding(Number(session.user.id));
+        revalidatePath("/", "layout");
+        return { success: true, message: "You can complete your profile any time" };
+    } catch (error) {
+        console.error("dismissProfileOnboardingAction error:", error);
+        return { success: false, message: "We couldn't save that preference. Please try again." };
     }
 }

@@ -7,6 +7,10 @@ CREATE TABLE users (
     email_verified TIMESTAMP NULL DEFAULT NULL,
     user_name VARCHAR(255) NOT NULL UNIQUE,
     image TEXT NULL,
+    age_group ENUM('under_18', '18_24', '25_34', '35_44', '45_54', '55_plus') NULL,
+    gender ENUM('woman', 'man', 'non_binary', 'prefer_not_to_say') NULL,
+    profile_onboarding_prompted_at TIMESTAMP NULL DEFAULT NULL,
+    profile_onboarding_dismissed_at TIMESTAMP NULL DEFAULT NULL,
     UNIQUE KEY uq_username (user_name),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

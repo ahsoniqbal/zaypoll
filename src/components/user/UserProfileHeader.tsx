@@ -73,10 +73,7 @@ export default function UserProfileHeader({
       {/* RIGHT */}
       {isOwnProfile ? (
         <div className="w-full sm:w-auto sm:self-start">
-          <EditProfileModal
-            initialName={user.name}
-            initialAgeGroup={user.ageGroup}
-          />
+          <EditProfileModal />
         </div>
       ) : showFollowButton && (
         <div className="w-full sm:w-auto sm:self-start">

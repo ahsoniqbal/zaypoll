@@ -1,10 +1,12 @@
 import { auth } from "@/auth";
+import { getUser } from "@/services/user.services";
 
 
 export async function getCurrentUser() {
   const session = await auth();
-
-  return session?.user ?? null;
+  if (!session?.user?.id) return null;
+  const current = await getUser(Number(session.user.id));
+  return current ? { ...session.user, ...current } : null;
 }
 
 export async function getAuthState() {

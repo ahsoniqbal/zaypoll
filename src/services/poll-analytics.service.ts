@@ -71,7 +71,7 @@ async function getPollAnalyticsUncached(pollId: number): Promise<PollAnalytics> 
   const createdAt = new Date(pollRows[0].created_at);
   const granularity = timelineGranularity(createdAt);
 
-  const [overviewResult, distributionResult, timelineResult, ageResult, audienceTotalResult, locationResult, deviceResult, sentimentResult, insightResult] = await Promise.all([
+  const [overviewResult, distributionResult, timelineResult, ageResult, genderResult, audienceTotalResult, locationResult, deviceResult, sentimentResult, insightResult] = await Promise.all([
     pool.query<RowDataPacket[]>(`
       SELECT p.total_votes, p.upvotes + p.downvotes AS reactions,
         (SELECT COUNT(*) FROM option_comments c INNER JOIN poll_options o ON o.id = c.option_id WHERE o.poll_id = p.id) AS reasons,
@@ -93,6 +93,14 @@ async function getPollAnalyticsUncached(pollId: number): Promise<PollAnalytics> 
       WHERE v.poll_id = ? AND u.age_group IS NOT NULL
       GROUP BY u.age_group, o.id, o.option_text, o.display_order
       ORDER BY FIELD(u.age_group, 'under_18','18_24','25_34','35_44','45_54','55_plus'), o.display_order, o.id`, [pollId]),
+    pool.query<RowDataPacket[]>(`
+      SELECT u.gender, o.id AS option_id, o.option_text, COUNT(*) AS vote_count
+      FROM poll_votes v
+      INNER JOIN users u ON u.id = v.user_id
+      INNER JOIN poll_options o ON o.id = v.option_id AND o.poll_id = v.poll_id
+      WHERE v.poll_id = ? AND u.gender IS NOT NULL
+      GROUP BY u.gender, o.id, o.option_text, o.display_order
+      ORDER BY FIELD(u.gender, 'woman','man','non_binary','prefer_not_to_say'), o.display_order, o.id`, [pollId]),
     pool.query<CountRow[]>("SELECT COUNT(*) AS count FROM poll_votes WHERE poll_id = ?", [pollId]),
     pool.query<RowDataPacket[]>(`
       SELECT e.country_code, o.id AS option_id, o.option_text, COUNT(*) AS vote_count
@@ -120,6 +128,7 @@ async function getPollAnalyticsUncached(pollId: number): Promise<PollAnalytics> 
   const distributionRows = distributionResult[0];
   const totalVotes = distributionRows.reduce((sum, row) => sum + Number(row.vote_count), 0);
   const knownAge = ageResult[0].reduce((sum, row) => sum + Number(row.vote_count), 0);
+  const knownGender = genderResult[0].reduce((sum, row) => sum + Number(row.vote_count), 0);
   const allVoters = Number(audienceTotalResult[0][0]?.count ?? 0);
   const insightRow = insightResult[0][0];
   const insights: PollInsight | null = insightRow ? {
@@ -178,6 +187,26 @@ async function getPollAnalyticsUncached(pollId: number): Promise<PollAnalytics> 
         })),
       };
     });
+  const genderLabels: Record<string, string> = {
+    woman: "Woman",
+    man: "Man",
+    non_binary: "Non-binary",
+    prefer_not_to_say: "Prefer not to say",
+  };
+  const genderGroups = Object.keys(genderLabels)
+    .filter((gender) => genderResult[0].some((row) => row.gender === gender))
+    .map((gender) => {
+      const rows = genderResult[0].filter((row) => row.gender === gender);
+      return {
+        gender,
+        label: genderLabels[gender],
+        totalVotes: rows.reduce((sum, row) => sum + Number(row.vote_count), 0),
+        optionVotes: distributionRows.map((option) => ({
+          optionId: Number(option.id),
+          voteCount: Number(rows.find((row) => Number(row.option_id) === Number(option.id))?.vote_count ?? 0),
+        })),
+      };
+    });
   const locationGroups = [...new Set(locationResult[0].map((row) => String(row.country_code)))]
     .map((countryCode) => {
       const rows = locationResult[0].filter((row) => row.country_code === countryCode);
@@ -211,6 +240,12 @@ async function getPollAnalyticsUncached(pollId: number): Promise<PollAnalytics> 
         coverage: { knownCount: knownAge, totalCount: allVoters, coveragePercentage: safePercentage(knownAge, allVoters) },
         isPrivate: knownAge < 10,
       },
+      gender: {
+        groups: knownGender < 10 ? [] : genderGroups,
+        options: distributionRows.map((row) => ({ optionId: Number(row.id), optionText: row.option_text })),
+        coverage: { knownCount: knownGender, totalCount: allVoters, coveragePercentage: safePercentage(knownGender, allVoters) },
+        isPrivate: knownGender < 10,
+      },
       locations: {
         groups: locationGroups,
         options: distributionRows.map((row) => ({ optionId: Number(row.id), optionText: row.option_text })),
@@ -232,7 +267,7 @@ async function getPollAnalyticsUncached(pollId: number): Promise<PollAnalytics> 
 export function getPollAnalytics(pollId: number): Promise<PollAnalytics> {
   return unstable_cache(
     () => getPollAnalyticsUncached(pollId),
-    [`poll-analytics-v4-${pollId}`],
+    [`poll-analytics-v5-${pollId}`],
     { revalidate: 60, tags: [`poll-analytics:${pollId}`] },
   )();
 }

@@ -29,6 +29,12 @@ export type AgeGroupItem = {
   totalVotes: number;
   optionVotes: Array<{ optionId: number; voteCount: number }>;
 };
+export type GenderGroupItem = {
+  gender: string;
+  label: string;
+  totalVotes: number;
+  optionVotes: Array<{ optionId: number; voteCount: number }>;
+};
 export type LocationGroupItem = {
   countryCode: string;
   label: string;
@@ -72,6 +78,12 @@ export type PollAnalytics = {
   audience: {
     age: {
       groups: AgeGroupItem[];
+      options: AgeOptionItem[];
+      coverage: DemographicCoverage;
+      isPrivate: boolean;
+    };
+    gender: {
+      groups: GenderGroupItem[];
       options: AgeOptionItem[];
       coverage: DemographicCoverage;
       isPrivate: boolean;

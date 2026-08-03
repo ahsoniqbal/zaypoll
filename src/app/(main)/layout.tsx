@@ -5,6 +5,8 @@ import RightSidebar from "@/components/RightSide";
 import Sidebar from "@/components/Sidebar";
 import { getAuthState, getCurrentUser } from "@/lib/server/auth.utils";
 import { Suspense } from "react";
+import ProfileCompletionProvider from "@/components/profile/ProfileCompletionProvider";
+import { getProfileCompletion } from "@/services/user.services";
 
 export default async function MainLayout({
   children,
@@ -14,8 +16,10 @@ export default async function MainLayout({
   const { isLoggedIn } = await getAuthState();
   const user = await getCurrentUser();
   const unreadCount = await fetchUnreadCount();
+  const profile = user?.id ? await getProfileCompletion(Number(user.id)) : null;
 
   return (
+    <ProfileCompletionProvider profile={profile}>
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Navbar isLoggedIn={isLoggedIn} user={user} />
 
@@ -38,6 +42,7 @@ export default async function MainLayout({
         </div>
       </div>
     </div>
+    </ProfileCompletionProvider>
   )
 
 }

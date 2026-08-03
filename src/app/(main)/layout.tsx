@@ -6,7 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import { getAuthState, getCurrentUser } from "@/lib/server/auth.utils";
 import { Suspense } from "react";
 import ProfileCompletionProvider from "@/components/profile/ProfileCompletionProvider";
-import { getProfileCompletion } from "@/services/user.services";
+import { getPopularAccounts, getProfileCompletion } from "@/services/user.services";
 
 export default async function MainLayout({
   children,
@@ -16,7 +16,10 @@ export default async function MainLayout({
   const { isLoggedIn } = await getAuthState();
   const user = await getCurrentUser();
   const unreadCount = await fetchUnreadCount();
-  const profile = user?.id ? await getProfileCompletion(Number(user.id)) : null;
+  const [profile, popularAccounts] = await Promise.all([
+    user?.id ? getProfileCompletion(Number(user.id)) : null,
+    getPopularAccounts(user?.id ? Number(user.id) : null),
+  ]);
 
   return (
     <ProfileCompletionProvider profile={profile}>
@@ -38,7 +41,7 @@ export default async function MainLayout({
           </Suspense>
           <div className="min-w-0 grow">{children}</div>
 
-          <RightSidebar />
+          <RightSidebar popularAccounts={popularAccounts} isLoggedIn={isLoggedIn} />
         </div>
       </div>
     </div>

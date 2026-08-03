@@ -93,6 +93,7 @@ export type CommentDto = {
     user: {
         userId: number;
         name: string;
+        userName: string;
         image: string | null
     };
 };

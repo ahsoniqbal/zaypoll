@@ -66,3 +66,11 @@ export type UserStats = {
     totalVotes: number;
     totalComments: number;
 }
+
+export type PopularAccount = {
+    id: number;
+    name: string;
+    userName: string;
+    image: string | null;
+    followersCount: number;
+};

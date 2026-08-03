@@ -36,7 +36,9 @@ export default function TopicSelector({
         (topic) =>
           !selectedTopics.includes(topic.id) &&
           (topic.name.toLocaleLowerCase().includes(keyword) ||
-            topic.parentName?.toLocaleLowerCase().includes(keyword)),
+            topic.ancestors?.some((ancestor) =>
+              ancestor.name.toLocaleLowerCase().includes(keyword),
+            )),
       )
       .sort((a, b) => {
         const aStartsWith = a.name.toLocaleLowerCase().startsWith(keyword);
@@ -136,7 +138,9 @@ export default function TopicSelector({
                 >
                   <span className="truncate text-sm font-medium">{topic.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">
-                    {topic.parentName ? `${topic.parentName} · Subtopic` : "Main topic"}
+                    {topic.ancestors?.length
+                      ? topic.ancestors.map((ancestor) => ancestor.name).join(" › ")
+                      : "Main topic"}
                   </span>
                 </button>
               ))

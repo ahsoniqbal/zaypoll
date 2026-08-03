@@ -28,7 +28,7 @@ export default function CreatePollButton({ isLoggedIn }: Props) {
       onClick={handleClick}
     >
       <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground"><Plus className="h-4 w-4" /></span>
-      <span className="flex-1">Start a new poll…</span>
+      <span className="flex-1 font-semibold text-lg">Start a poll</span>
     </button>
   );
 }

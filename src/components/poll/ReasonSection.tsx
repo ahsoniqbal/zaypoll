@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquareText, SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
+import { MessageSquareText, LucideSortDesc } from "lucide-react";
 import { CommentDto, PollOptionDto } from "@/dto/poll.dtos";
 import { getPollReasonsAction } from "@/actions/poll.actions";
 import { formatRelativeTime, getInitials } from "@/lib/utils";
@@ -98,19 +99,39 @@ export default function ReasonSection({
   };
 
   const getChipClasses = (isSelected: boolean) =>
-  [
-    "max-w-full whitespace-nowrap rounded-md border px-2.5 py-1.5",
-    "inline-flex items-center",
-    "text-xs font-semibold text-foreground",
-    "cursor-pointer transition-colors hover:bg-secondary",
-    isSelected
-      ? "border-neutral-300 bg-secondary"
-      : "border-border bg-background",
-  ].join(" ");
+    [
+      "max-w-full whitespace-nowrap rounded-md border px-2.5 py-1.5",
+      "inline-flex items-center",
+      "text-xs font-semibold text-foreground",
+      "cursor-pointer transition-colors hover:bg-secondary",
+      isSelected
+        ? "border-neutral-300 bg-secondary"
+        : "border-border bg-background",
+    ].join(" ");
 
   return (
     <section className="space-y-4">
-      
+
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold">Reasons</h2>
+        </div>
+        <label className="flex cursor-pointer items-center gap-1 rounded-full border bg-background px-2 py-1 text-xs font-medium transition-colors hover:bg-muted/50 hover:text-foreground">
+          <LucideSortDesc className="size-3.5" aria-hidden="true" />
+          <span className="sr-only">Sort</span>
+          <select
+            value={sortBy}
+            aria-label="Sort reasons"
+            onChange={(event) => changeSort(event.target.value as ReasonSort)}
+            className="cursor-pointer bg-transparent text-foreground outline-none"
+          >
+            <option value="top">Top</option>
+            <option value="latest">Newest</option>
+          </select>
+        </label>
+      </div>
+
       <ReasonComposer
         pollId={pollId}
         optionId={userVoteOptionId}
@@ -118,6 +139,7 @@ export default function ReasonSection({
         isUserLoggedIn={isUserLoggedIn}
         hasVoted={hasVoted}
         hasReason={hasReason}
+        alwaysExpanded
         onReasonAdded={refreshReasonCaches}
       />
 
@@ -144,22 +166,7 @@ export default function ReasonSection({
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center justify-end gap-3">
 
-        <label className="flex cursor-pointer items-center gap-2 rounded-full border bg-background px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground">
-          <SlidersHorizontal className="size-3.5" aria-hidden="true" />
-          <span className="sr-only">Sort reasons</span>
-          <select
-            value={sortBy}
-            aria-label="Sort reasons"
-            onChange={(event) => changeSort(event.target.value as ReasonSort)}
-            className="cursor-pointer bg-transparent text-foreground outline-none"
-          >
-            <option value="top">Top reasons</option>
-            <option value="latest">Newest first</option>
-          </select>
-        </label>
-      </div>
 
       <div>
         {loading && (
@@ -195,55 +202,71 @@ export default function ReasonSection({
             return (
               <article
                 key={comment.id}
-                className="group flex gap-2 py-1 transition-colors hover:bg-muted/25 sm:py-2"
+
               >
-                <Avatar className="size-9">
-                  {comment.user.image && (
-                    <AvatarImage
-                      src={comment.user.image}
-                      alt={`${comment.user.name}'s profile`}
-                    />
-                  )}
-                  <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
-                    {getInitials(comment.user.name)}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="group flex gap-2 py-1 transition-colors hover:bg-muted/25 sm:py-2">
+                  <Link
+                    href={`/user/${encodeURIComponent(comment.user.userName)}`}
+                    aria-label={`View ${comment.user.name}'s profile`}
+                    className="h-fit shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <Avatar className="size-9">
+                      {comment.user.image && (
+                        <AvatarImage
+                          src={comment.user.image}
+                          alt={`${comment.user.name}'s profile`}
+                        />
+                      )}
+                      <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+                        {getInitials(comment.user.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Link>
 
-                <div className="min-w-0 flex-1 border rounded-xl border-border bg-background px-4 py-3 transition-colors">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-                    <p className="text-sm font-semibold">{comment.user.name}</p>
-                    <span className="text-xs text-muted-foreground">
-                      · {formatRelativeTime(comment.createdAt)}
-                    </span>
-                    {selectedOptionId === ALL && (
-                      <Badge
-                        variant="outline"
-                        title={selectedOption?.optionText ?? "Unknown option"}
-                        aria-label={`Selected option: ${selectedOption?.optionText ?? "Unknown option"}`}
-                        className="max-w-28 border-primary/20 bg-primary/8 text-primary sm:max-w-36"
-                      >
-                        <span className="truncate">
-                          {selectedOption?.optionText ?? "Unknown option"}
+                  <div className="min-w-0 flex-1">
+                    <div className="rounded-xl border border-border bg-background px-4 py-2 transition-colors">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                        <Link
+                          href={`/user/${encodeURIComponent(comment.user.userName)}`}
+                          className="text-sm font-semibold hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {comment.user.name}
+                        </Link>
+                        <span className="text-xs text-muted-foreground">
+                          • {formatRelativeTime(comment.createdAt)}
                         </span>
-                      </Badge>
-                    )}
-                  </div>
+                        {selectedOptionId === ALL && (
+                          <Badge
+                            variant="default"
+                            title={selectedOption?.optionText ?? "Unknown option"}
+                            aria-label={`Selected option: ${selectedOption?.optionText ?? "Unknown option"}`}
+                            className="max-w-28 border-primary/20 bg-primary/8 text-primary sm:max-w-36"
+                          >
+                            <span className="truncate">
+                              {selectedOption?.optionText ?? "Unknown option"}
+                            </span>
+                          </Badge>
+                        )}
+                      </div>
 
-                  <p className="mt-2 break-words text-sm leading-6 text-foreground/90">
-                    {comment.comment}
-                  </p>
+                      <p className="mt-2 break-words text-sm leading-6 text-foreground/90">
+                        {comment.comment}
+                      </p>
 
-                  <div className="mt-3">
-                    <CommentReactions
-                      commentId={comment.id}
-                      upvotes={comment.upvotes}
-                      downvotes={comment.downvotes}
-                      userVote={comment.userReaction}
-                      isUserLoggedIn={isUserLoggedIn}
-                    />
+                    </div>
+                    <div className="mt-1 flex">
+                      <CommentReactions
+                        commentId={comment.id}
+                        upvotes={comment.upvotes}
+                        downvotes={comment.downvotes}
+                        userVote={comment.userReaction}
+                        isUserLoggedIn={isUserLoggedIn}
+                      />
+                    </div>
                   </div>
                 </div>
               </article>
+
             );
           })}
       </div>

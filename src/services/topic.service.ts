@@ -24,6 +24,28 @@ const toTopic = (row: TopicRow): TopicDto => ({
   childCount: Number(row.child_count ?? 0),
 });
 
+const withAncestors = (topics: TopicDto[]): TopicDto[] => {
+  const topicsById = new Map(topics.map((topic) => [topic.id, topic]));
+
+  return topics.map((topic) => {
+    const ancestors: NonNullable<TopicDto["ancestors"]> = [];
+    const visited = new Set([topic.id]);
+    let parentId = topic.parentId;
+
+    while (parentId) {
+      if (visited.has(parentId)) break;
+      visited.add(parentId);
+
+      const parent = topicsById.get(parentId);
+      if (!parent) break;
+      ancestors.unshift({ id: parent.id, name: parent.name, slug: parent.slug });
+      parentId = parent.parentId;
+    }
+
+    return { ...topic, ancestors };
+  });
+};
+
 export async function getParentTopics(): Promise<TopicDto[]> {
   const [rows] = await pool.query<TopicRow[]>(`
     SELECT t.id, t.name, t.slug, t.icon_url, t.parent_id, COUNT(child.id) AS child_count
@@ -47,7 +69,7 @@ export async function getSearchableTopics(): Promise<TopicDto[]> {
     ORDER BY t.sort_order ASC, t.name ASC
   `);
 
-  return rows.map(toTopic);
+  return withAncestors(rows.map(toTopic));
 }
 
 export async function getTopicBySlug(slug: string): Promise<TopicDto | null> {
@@ -83,6 +105,57 @@ export async function getSubTopics(parentId: number): Promise<TopicDto[]> {
   `, [parentId]);
 
   return rows.map(toTopic);
+}
+
+export async function getTopicPath(topicId: number): Promise<TopicDto[]> {
+  const [rows] = await pool.query<(TopicRow & { depth: number })[]>(`
+    WITH RECURSIVE topic_path AS (
+      SELECT id, name, slug, icon_url, parent_id, 0 AS depth,
+             CAST(CONCAT(',', id, ',') AS CHAR(2000)) AS visited_ids
+      FROM topics
+      WHERE id = ? AND is_active = 1
+
+      UNION ALL
+
+      SELECT parent.id, parent.name, parent.slug, parent.icon_url,
+             parent.parent_id, topic_path.depth + 1,
+             CONCAT(topic_path.visited_ids, parent.id, ',')
+      FROM topics parent
+      INNER JOIN topic_path ON topic_path.parent_id = parent.id
+      WHERE parent.is_active = 1
+        AND topic_path.depth < 31
+        AND LOCATE(CONCAT(',', parent.id, ','), topic_path.visited_ids) = 0
+    )
+    SELECT id, name, slug, icon_url, parent_id, depth
+    FROM topic_path
+    ORDER BY depth DESC
+  `, [topicId]);
+
+  return rows.map(toTopic);
+}
+
+export async function getTopicAndDescendantIds(topicId: number): Promise<number[]> {
+  const [rows] = await pool.query<(RowDataPacket & { id: number })[]>(`
+    WITH RECURSIVE topic_tree AS (
+      SELECT id, 0 AS depth,
+             CAST(CONCAT(',', id, ',') AS CHAR(2000)) AS visited_ids
+      FROM topics
+      WHERE id = ? AND is_active = 1
+
+      UNION ALL
+
+      SELECT child.id, parent.depth + 1,
+             CONCAT(parent.visited_ids, child.id, ',')
+      FROM topics child
+      INNER JOIN topic_tree parent ON child.parent_id = parent.id
+      WHERE child.is_active = 1
+        AND parent.depth < 31
+        AND LOCATE(CONCAT(',', child.id, ','), parent.visited_ids) = 0
+    )
+    SELECT id FROM topic_tree
+  `, [topicId]);
+
+  return rows.map((row) => row.id);
 }
 
 // Kept for existing callers that need every active topic.

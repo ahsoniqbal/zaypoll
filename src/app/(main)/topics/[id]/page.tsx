@@ -5,7 +5,12 @@ import PollFeed from "@/components/poll/PollFeed";
 import SubtopicChips from "@/components/topic/SubtopicChips";
 import { getCurrentUser } from "@/lib/server/auth.utils";
 import { getPolls } from "@/services/poll.services";
-import { getSubTopics, getTopicById, getTopicBySlug } from "@/services/topic.service";
+import {
+  getSubTopics,
+  getTopicAndDescendantIds,
+  getTopicBySlug,
+  getTopicPath,
+} from "@/services/topic.service";
 import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from "@/types/constants";
 
 type Props = {
@@ -19,10 +24,11 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
 
   if (!topic) return { title: "Topic not found" };
 
-  const parentLabel = topic.parentName ? `${topic.parentName} · ` : "";
+  const path = await getTopicPath(topic.id);
+  const topicLabel = path.map((item) => item.name).join(" · ");
   return {
     title: `${topic.name} polls`,
-    description: `Explore public polls and discussion about ${parentLabel}${topic.name}.`,
+    description: `Explore public polls and discussion about ${topicLabel}.`,
     alternates: { canonical: `/topics/${topic.slug}` },
   };
 }
@@ -33,12 +39,11 @@ export default async function TopicPage({ params, searchParams }: Props) {
 
   if (!topic) notFound();
 
-  const parentTopic = topic.parentId ? await getTopicById(topic.parentId) : topic;
-  if (!parentTopic) notFound();
-
-  const subTopics = await getSubTopics(parentTopic.id);
-  const isParentTopic = topic.id === parentTopic.id;
-  const topicIds = isParentTopic ? [parentTopic.id, ...subTopics.map((subTopic) => subTopic.id)] : topic.id;
+  const [subTopics, topicPath, topicIds] = await Promise.all([
+    getSubTopics(topic.id),
+    getTopicPath(topic.id),
+    getTopicAndDescendantIds(topic.id),
+  ]);
   const page = Math.max(DEFAULT_PAGE, Number(query.page) || DEFAULT_PAGE);
   const polls = await getPolls(user?.id ?? null, page, DEFAULT_PAGE_LIMIT, "for_you", topicIds, "latest");
 
@@ -46,8 +51,21 @@ export default async function TopicPage({ params, searchParams }: Props) {
     <main className="content-shell space-y-6">
       <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-muted-foreground">
         <Link href="/explore" className="hover:text-foreground">Explore</Link>
-        {topic.parentName && <><span>/</span><Link href={`/topics/${parentTopic.slug}`} className="hover:text-foreground">{parentTopic.name}</Link></>}
-        <span>/</span><span className="text-foreground">{topic.name}</span>
+        {topicPath.map((pathTopic, index) => {
+          const isCurrent = index === topicPath.length - 1;
+          return (
+            <span key={pathTopic.id} className="contents">
+              <span>/</span>
+              {isCurrent ? (
+                <span className="text-foreground">{pathTopic.name}</span>
+              ) : (
+                <Link href={`/topics/${pathTopic.slug}`} className="hover:text-foreground">
+                  {pathTopic.name}
+                </Link>
+              )}
+            </span>
+          );
+        })}
       </nav>
 
       {/* <header>
@@ -58,7 +76,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
         </p>
       </header> */}
 
-      <SubtopicChips parentTopic={parentTopic} subTopics={subTopics} activeTopicId={topic.id} />
+      <SubtopicChips parentTopic={topic} subTopics={subTopics} activeTopicId={topic.id} />
 
       <section aria-labelledby="topic-feed-heading" className="space-y-4">
         {/* <div>

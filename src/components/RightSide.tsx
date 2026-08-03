@@ -5,6 +5,8 @@ import type { TopicDto } from "@/dto/category.dtos";
 import { getParentTopics } from "@/services/topic.service";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import ProfileCompletionCard from "./profile/ProfileCompletionCard";
+import PopularAccountsCard from "./user/PopularAccountsCard";
+import type { PopularAccount } from "@/types/user.types";
 
 const VISIBLE_TOPIC_COUNT = 5;
 
@@ -32,7 +34,13 @@ function TopicItem({ topic }: { topic: TopicDto }) {
   );
 }
 
-export default async function RightSidebar() {
+export default async function RightSidebar({
+  popularAccounts,
+  isLoggedIn,
+}: {
+  popularAccounts: PopularAccount[];
+  isLoggedIn: boolean;
+}) {
   const topics = await getParentTopics();
   const visibleTopics = topics.slice(0, VISIBLE_TOPIC_COUNT);
   const remainingTopics = topics.slice(VISIBLE_TOPIC_COUNT);
@@ -74,6 +82,10 @@ export default async function RightSidebar() {
           )}
         </CardContent>
       </Card>
+      <PopularAccountsCard
+        initialAccounts={popularAccounts}
+        isLoggedIn={isLoggedIn}
+      />
     </aside>
   );
 }

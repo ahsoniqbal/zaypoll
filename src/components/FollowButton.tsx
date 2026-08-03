@@ -10,12 +10,16 @@ type Props = {
     userId: number;
     initialIsFollowing: boolean;
     isLoggedIn: boolean;
+    compact?: boolean;
+    onFollowChange?: (isFollowing: boolean) => void;
 };
 
 export default function FollowButton({
     userId,
     initialIsFollowing,
     isLoggedIn,
+    compact = false,
+    onFollowChange,
 }: Props) {
     const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
     const [isPending, startTransition] = useTransition();
@@ -32,6 +36,7 @@ export default function FollowButton({
 
             if (res.success && typeof res.isFollowing === "boolean") {
                 setIsFollowing(res.isFollowing); //sync with server truth
+                onFollowChange?.(res.isFollowing);
             } else {
                 console.error(res.message);
             }
@@ -44,8 +49,11 @@ export default function FollowButton({
             onClick={handleToggle}
             disabled={isPending}
             aria-pressed={isFollowing}
-            variant={isFollowing ? "outline" : "default"}
-            className="w-full min-w-24 sm:w-auto"
+            variant={compact || isFollowing ? "outline" : "default"}
+            size={compact ? "sm" : "default"}
+            className={compact
+                ? "h-7 min-w-0 bg-transparent px-2 text-xs text-foreground hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:border-primary focus-visible:bg-primary focus-visible:text-primary-foreground"
+                : "w-full min-w-24 sm:w-auto"}
         >
             {isPending && <LoaderCircle className="animate-spin" />}
             {isPending ? "Updating" : isFollowing ? "Following" : "Follow"}

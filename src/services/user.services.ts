@@ -4,7 +4,7 @@ import pool from "@/lib/db";
 import { AppError } from "@/lib/error";
 import { PagedResponse } from "@/types/common.types";
 import { DEFAULT_PAGE_LIMIT } from "@/types/constants";
-import { AgeGroup, Gender, ProfileCompletion, User, UserDetails, UserRow } from "@/types/user.types";
+import { AgeGroup, Gender, PopularAccount, ProfileCompletion, User, UserDetails, UserRow } from "@/types/user.types";
 import { ResultSetHeader } from "mysql2";
 import { UserData } from "next-auth/providers/42-school";
 import { createNotification } from "./notification.service";
@@ -193,6 +193,37 @@ export async function getUser(id: number): Promise<User | null> {
         return null;
     }
     return mapUser(rows[0]);
+}
+
+export async function getPopularAccounts(
+    currentUserId: number | null,
+    limit: number = 20,
+): Promise<PopularAccount[]> {
+    const safeLimit = Number.isInteger(limit) ? Math.min(50, Math.max(1, limit)) : 20;
+    const [rows] = await pool.query<(UserRow & { last_poll_at: Date | null })[]>(
+        `SELECT u.id, u.name, u.user_name, u.image, u.followers_count,
+                MAX(p.created_at) AS last_poll_at
+         FROM users u
+         LEFT JOIN polls p ON p.created_by = u.id
+         WHERE (? IS NULL OR u.id <> ?)
+           AND (? IS NULL OR NOT EXISTS (
+             SELECT 1
+             FROM user_follows uf
+             WHERE uf.follower_id = ? AND uf.following_id = u.id
+           ))
+         GROUP BY u.id, u.name, u.user_name, u.image, u.followers_count, u.created_at
+         ORDER BY u.followers_count DESC, last_poll_at DESC, u.created_at DESC
+         LIMIT ?`,
+        [currentUserId, currentUserId, currentUserId, currentUserId, safeLimit],
+    );
+
+    return rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        userName: row.user_name,
+        image: row.image,
+        followersCount: Number(row.followers_count ?? 0),
+    }));
 }
 
 export async function createUser(user: { username: string, password: string }) {

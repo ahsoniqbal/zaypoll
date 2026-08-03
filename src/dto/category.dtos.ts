@@ -14,5 +14,7 @@ export type TopicDto = {
     parentId?: number | null;
     parentName?: string | null;
     parentSlug?: string | null;
+    /** Ancestors ordered from the root to the immediate parent. */
+    ancestors?: Pick<TopicDto, "id" | "name" | "slug">[];
     childCount?: number;
 };

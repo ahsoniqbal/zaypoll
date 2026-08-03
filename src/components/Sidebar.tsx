@@ -10,7 +10,6 @@ import {
   Home,
   Compass,
   User,
-  PlusCircle,
   Users,
   Bell,
   Menu,

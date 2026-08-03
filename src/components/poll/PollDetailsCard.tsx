@@ -117,9 +117,7 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
                 </span>
                 {poll.expiresAt && (
                     <>
-                        <span aria-hidden="true">
-                            &middot;
-                        </span>
+                        <span aria-hidden="true">•</span>
                         <PollExpiryStatus expiresAt={poll.expiresAt} isExpired={isExpired} />
                     </>
                 )}

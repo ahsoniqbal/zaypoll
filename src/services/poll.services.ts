@@ -1492,6 +1492,8 @@ export async function getPollReasons(pollId: number, loggedInUserId: number | nu
             c.created_at,
             c.user_id,
             u.name,
+            u.user_name,
+            u.image,
             c.upvotes,
             c.downvotes,
             cr.vote AS user_reaction
@@ -1522,6 +1524,8 @@ export async function getPollReasons(pollId: number, loggedInUserId: number | nu
         user: {
             userId: row.user_id,
             name: row.name,
+            userName: row.user_name,
+            image: row.image ?? null,
         },
     }));
 }
@@ -1549,6 +1553,8 @@ export async function getCommentsByOptionId(
           c.created_at,
           c.user_id,
           u.name,
+          u.user_name,
+          u.image,
           c.upvotes,
           c.downvotes,
           cr.vote AS user_reaction,
@@ -1579,6 +1585,8 @@ export async function getCommentsByOptionId(
         user: {
             userId: row.user_id,
             name: row.name,
+            userName: row.user_name,
+            image: row.image ?? null,
         },
     }));
 }

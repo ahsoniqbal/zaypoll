@@ -14,11 +14,12 @@ type Props = {
   isUserLoggedIn: boolean;
   hasVoted: boolean;
   hasReason: boolean;
+  alwaysExpanded?: boolean;
   onReasonAdded?: (optionId: number) => void | Promise<void>;
 };
 
-export default function ReasonComposer({ pollId, optionId, optionText, isUserLoggedIn, hasVoted, hasReason, onReasonAdded }: Props) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function ReasonComposer({ pollId, optionId, optionText, isUserLoggedIn, hasVoted, hasReason, alwaysExpanded = false, onReasonAdded }: Props) {
+  const [isOpen, setIsOpen] = useState(alwaysExpanded);
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { open } = useAuthModal();
@@ -29,7 +30,7 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
         type="button"
         onClick={open}
         variant="outline"
-        className="w-full justify-center rounded-xl text-center font-medium text-muted-foreground hover:cursor-pointer"
+        className="w-full rounded-xl text-center font-medium text-muted-foreground hover:cursor-pointer"
       >
         Add a reason (optional)
       </Button>
@@ -38,7 +39,7 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
 
   if (!hasVoted || !optionId || hasReason) return null;
 
-  const cancel = () => {
+  const resetComposer = () => {
     setReason("");
     setIsOpen(false);
   };
@@ -57,7 +58,7 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
       }
 
       toast.success(result.message);
-      cancel();
+      resetComposer();
       void onReasonAdded?.(addedOptionId);
     } catch {
       toast.error("Could not add your reason. Please try again.");
@@ -72,7 +73,8 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
         type="button"
         onClick={() => setIsOpen(true)}
         variant="outline"
-        className="h-auto w-full cursor-pointer justify-center rounded-xl px-4 py-2 text-center font-medium text-muted-foreground">
+        className="h-auto w-full cursor-pointer rounded-xl px-4 py-2 text-center font-medium text-muted-foreground"
+      >
         Add a reason
       </Button>
     );
@@ -86,9 +88,9 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
         value={reason}
         onChange={(event) => setReason(event.target.value)}
         maxLength={150}
-        autoFocus
+        autoFocus={!alwaysExpanded}
         placeholder={optionText ? `Why did you choose “${optionText}”?` : "Why did you choose this option?"}
-        className="min-h-[100px] w-full resize-y border-0 bg-transparent px-3 pt-3 pb-14 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+        className={`min-h-15 w-full resize-y border-0 bg-transparent px-3 pb-12 pt-3 text-sm focus-visible:ring-0 focus-visible:ring-offset-0`}
       />
       
       {/* Absolute overlay at the bottom of the container */}
@@ -97,7 +99,7 @@ export default function ReasonComposer({ pollId, optionId, optionText, isUserLog
           type="button"
           variant="ghost" 
           size="sm" 
-          onClick={cancel} 
+          onClick={resetComposer} 
           disabled={isSubmitting}
           className="h-8 px-3 text-xs"
         >

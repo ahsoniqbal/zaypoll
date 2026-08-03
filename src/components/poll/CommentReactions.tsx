@@ -77,9 +77,9 @@ export default function CommentReactions({
             }
         });
     };
-
+//  border bg-background p-0.5 shadow-xs
     return (
-        <div className="inline-flex items-center rounded-full border bg-background p-0.5 shadow-xs">
+        <div className="inline-flex items-center rounded-full">
 
             {/* ✅ Upvote */}
             <button type="button" onClick={() => handleReaction(1)}

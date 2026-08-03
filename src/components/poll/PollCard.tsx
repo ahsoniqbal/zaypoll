@@ -135,30 +135,13 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                 </span>
                 {poll.expiresAt && (
                     <>
-                        <span aria-hidden="true">
-                            &middot;
-                        </span>
+                        <span aria-hidden="true">•</span>
                         <PollExpiryStatus expiresAt={poll.expiresAt} isExpired={isExpired} />
                     </>
                 )}
             </div>
 
-            {showReasonComposer && (
-                <div
-                    className="mx-auto my-4 w-full"
-                    onClick={(event) => event.stopPropagation()}
-                >
-                    <ReasonComposer
-                        pollId={poll.pollId}
-                        optionId={userVoteOptionId}
-                        optionText={options.find((option) => option.id === userVoteOptionId)?.optionText}
-                        isUserLoggedIn={isUserLoggedIn}
-                        hasVoted={hasVoted}
-                        hasReason={hasReason}
-                        onReasonAdded={() => setHasReason(true)}
-                    />
-                </div>
-            )}
+
 
             {/* Reactions, reasons and vote button */}
             <div
@@ -191,7 +174,22 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                     {isExpired ? "Poll ended" : "Vote"}
                 </AppButton>
             </div>
-
+            {showReasonComposer && (
+                <div
+                    className="mx-auto mt-4 w-full"
+                    onClick={(event) => event.stopPropagation()}
+                >
+                    <ReasonComposer
+                        pollId={poll.pollId}
+                        optionId={userVoteOptionId}
+                        optionText={options.find((option) => option.id === userVoteOptionId)?.optionText}
+                        isUserLoggedIn={isUserLoggedIn}
+                        hasVoted={hasVoted}
+                        hasReason={hasReason}
+                        onReasonAdded={() => setHasReason(true)}
+                    />
+                </div>
+            )}
         </article>
     );
 }

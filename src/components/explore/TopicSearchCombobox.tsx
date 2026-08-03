@@ -21,7 +21,10 @@ export default function TopicSearchCombobox({ topics }: Props) {
     if (!normalizedQuery) return [];
 
     return topics
-      .filter((topic) => topic.name.toLocaleLowerCase().includes(normalizedQuery))
+      .filter((topic) =>
+        [topic.name, ...(topic.ancestors?.map((ancestor) => ancestor.name) ?? [])]
+          .some((name) => name.toLocaleLowerCase().includes(normalizedQuery)),
+      )
       .slice(0, 8);
   }, [query, topics]);
 
@@ -85,7 +88,9 @@ export default function TopicSearchCombobox({ topics }: Props) {
             >
               <span className="font-medium text-foreground">{topic.name}</span>
               <span className="text-xs text-muted-foreground">
-                {topic.parentName ? `${topic.parentName} · Sub-topic` : "Main topic"}
+                {topic.ancestors?.length
+                  ? topic.ancestors.map((ancestor) => ancestor.name).join(" › ")
+                  : "Main topic"}
               </span>
             </Link>
           )) : (

@@ -2,8 +2,9 @@
 
 import type { PollAnalytics } from "@/types/poll-analytics.types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Activity, BarChart3, Brain, CalendarDays, Clock3, Eye, Lightbulb, MapPin, MessageSquareText, MonitorSmartphone, SmilePlus, ThumbsUp, Users, Vote } from "lucide-react";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, LabelList, Legend, Pie, PieChart, ResponsiveContainer as RechartsResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { refreshPollInsightsAction } from "@/actions/poll.actions";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -11,6 +12,16 @@ import { Button } from "@/components/ui/button";
 import { formatRelativeTime } from "@/lib/utils";
 
 const chartColors = ["#e16540", "#4f7cac", "#69a05a", "#d19a32", "#8965ad", "#cf5d86"];
+const voteDistributionConfig = {
+  voteCount: {
+    label: "Votes",
+    color: "color-mix(in oklab, var(--primary) 20%, transparent)",
+  },
+  // label: {
+  //   color: "var(--primary)",
+  // },
+} satisfies ChartConfig;
+
 const tooltipStyle = {
   border: "1px solid var(--border)",
   borderRadius: "12px",
@@ -18,6 +29,10 @@ const tooltipStyle = {
   boxShadow: "0 10px 30px rgba(20, 20, 20, 0.1)",
   fontSize: "12px",
 };
+
+function ResponsiveContainer(props: React.ComponentProps<typeof RechartsResponsiveContainer>) {
+  return <RechartsResponsiveContainer minWidth={0} minHeight={0} initialDimension={{ width: 320, height: 200 }} {...props} />;
+}
 
 function Empty({ children }: { children: React.ReactNode }) {
   return <div className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">{children}</div>;
@@ -37,7 +52,11 @@ export default function PollAnalyticsTab({ analytics, pollId, canRefreshInsights
   const [isRefreshing, startTransition] = useTransition();
   const [refreshMessage, setRefreshMessage] = useState<string | null>(null);
   const [voteChartType, setVoteChartType] = useState<"bar" | "donut" | "pie">("bar");
-  const [horizontalBars, setHorizontalBars] = useState(false);
+  const [horizontalBars, setHorizontalBars] = useState(true);
+  const voteDistributionData = analytics.voteDistribution.map((item) => ({
+    ...item,
+    voteLabel: `${item.voteCount.toLocaleString()} (${item.percentage}%)`,
+  }));
   const overview = [
     { label: "Total votes", value: analytics.overview.totalVotes.toLocaleString(), icon: Vote },
     { label: "Views", value: analytics.overview.views.toLocaleString(), icon: Eye },
@@ -95,10 +114,28 @@ export default function PollAnalyticsTab({ analytics, pollId, canRefreshInsights
   }));
 
   return <div className="space-y-5 pt-2">
-    <section aria-labelledby="poll-overview-heading"><div className="mb-3"><h2 id="poll-overview-heading" className="text-lg font-semibold">Poll overview</h2><p className="text-sm text-muted-foreground">Current participation and engagement totals.</p></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{overview.map(({ label, value, icon: Icon }) => <Card key={label} size="sm"><CardContent><span className="mb-3 flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="size-4" aria-hidden="true" /></span><p className="text-xl font-semibold tabular-nums">{value}</p><p className="mt-1 text-xs text-muted-foreground">{label}</p></CardContent></Card>)}</div></section>
+    <section aria-labelledby="poll-overview-heading"><div className="mb-3"><h2 id="poll-overview-heading" className="text-lg font-semibold">Poll overview</h2><p className="text-sm text-muted-foreground">Current participation and engagement totals.</p></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{overview.map(({ label, value, icon: Icon }) => <Card key={label} size="sm"><CardContent><span className="mb-3 flex size-8 items-center justify-center rounded-lg bg-primary/20"><Icon className="size-4" aria-hidden="true" /></span><p className="text-xl font-semibold tabular-nums">{value}</p><p className="mt-1 text-xs text-muted-foreground">{label}</p></CardContent></Card>)}</div></section>
 
     <SectionCard icon={BarChart3} title="Vote distribution" description="Current votes and share for each option." action={<label className="shrink-0"><span className="sr-only">Chart type</span><select value={voteChartType} onChange={(event) => setVoteChartType(event.target.value as "bar" | "donut" | "pie")} className="cursor-pointer rounded-lg border bg-background px-3 py-2 text-xs font-medium outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20"><option value="bar">Bar chart</option><option value="donut">Donut chart</option><option value="pie">Pie chart</option></select></label>}>
-      {analytics.overview.totalVotes === 0 ? <Empty>No votes have been cast yet.</Empty> : <>{voteChartType === "bar" && <div className="mb-4 flex justify-end"><Button type="button" variant="outline" size="sm" onClick={() => setHorizontalBars((current) => !current)}>Switch to {horizontalBars ? "Vertical" : "Horizontal"}</Button></div>}<div className="relative h-[400px] w-full" aria-hidden="true"><ResponsiveContainer width="100%" height="100%">{voteChartType === "bar" ? <BarChart data={analytics.voteDistribution} layout={horizontalBars ? "vertical" : "horizontal"} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>{horizontalBars ? <><XAxis type="number" allowDecimals={false} /><YAxis type="category" dataKey="optionText" width={100} /></> : <><XAxis dataKey="optionText" /><YAxis allowDecimals={false} /></>}<Tooltip contentStyle={tooltipStyle} formatter={(value, _name, item) => [`${Number(value).toLocaleString()} votes (${item.payload.percentage}%)`, item.payload.optionText]} /><Bar dataKey="voteCount" fill="rgba(225, 101, 64, 0.7)" /></BarChart> : <PieChart><Pie data={analytics.voteDistribution} dataKey="voteCount" nameKey="optionText" cx="50%" cy="46%" outerRadius={102} innerRadius={voteChartType === "donut" ? 60 : 0} paddingAngle={voteChartType === "donut" ? 2 : 1} stroke="var(--card)" strokeWidth={2}>{analytics.voteDistribution.map((option, index) => <Cell key={option.optionId} fill={chartColors[index % chartColors.length]} className="cursor-pointer" />)}</Pie><Tooltip contentStyle={tooltipStyle} formatter={(value, _name, item) => [`${Number(value).toLocaleString()} votes (${item.payload.percentage}%)`, item.payload.optionText]} /><Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "12px" }} /></PieChart>}</ResponsiveContainer>{voteChartType === "donut" && <div className="pointer-events-none absolute inset-0 flex items-center justify-center pb-7"><div className="text-center"><p className="text-xl font-semibold tabular-nums">{analytics.overview.totalVotes.toLocaleString()}</p><p className="text-[11px] text-muted-foreground">Total votes</p></div></div>}</div><p className="sr-only">{analytics.voteDistribution.map((item) => `${item.optionText}: ${item.voteCount} votes, ${item.percentage}%`).join(". ")}.</p></>}
+      {analytics.overview.totalVotes === 0 ? <Empty>No votes have been cast yet.</Empty>
+        : <>
+          {voteChartType === "bar" && <div className="mb-3 flex justify-end"><Button type="button" variant="outline" size="sm" onClick={() => setHorizontalBars((current) => !current)}>Switch to {horizontalBars ? "Vertical" : "Horizontal"}</Button></div>}
+          {voteChartType === "bar" ? <ChartContainer config={voteDistributionConfig} className="w-full aspect-auto" style={{ height: horizontalBars ? Math.max(190, analytics.voteDistribution.length * 48) : 320 }} aria-hidden="true">
+            <BarChart accessibilityLayer data={voteDistributionData} layout={horizontalBars ? "vertical" : "horizontal"} margin={horizontalBars ? { right: 88 } : { top: 24, right: 16, left: 16, bottom: 28 }}>
+              <CartesianGrid horizontal={!horizontalBars} vertical={horizontalBars} />
+              {horizontalBars ? <><YAxis dataKey="optionText" type="category" axisLine={false} tickLine={false} hide /><XAxis dataKey="voteCount" type="number" hide /></> : <><XAxis dataKey="optionText" type="category" axisLine={false} tickLine={false} interval={0} tickFormatter={(value) => String(value).length > 12 ? `${String(value).slice(0, 12)}…` : String(value)} /><YAxis dataKey="voteCount" type="number" hide /></>}
+              <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" labelKey="optionText" formatter={(value, _name, item) => <div className="flex min-w-36 flex-1 items-center justify-between gap-4">
+                <span className="text-muted-foreground">Votes</span><span className="font-mono font-medium tabular-nums">{Number(value).toLocaleString()} ({item.payload.percentage}%)</span>
+              </div>} />}
+              />
+              <Bar dataKey="voteCount" fill="var(--color-voteCount)" radius={4}>
+                <LabelList dataKey="optionText" position="insideLeft" offset={8} className={horizontalBars ? "fill-primary font-medium" : "hidden"} fontSize={14} formatter={(value: React.ReactNode) => { const label = String(value); return label.length > 28 ? `${label.slice(0, 28)}…` : label; }} />
+                <LabelList dataKey="voteLabel" position={horizontalBars ? "right" : "top"} offset={8} className="fill-foreground font-semibold" fontSize={12} />
+              </Bar>
+            </BarChart>
+          </ChartContainer> : <div className="relative h-[340px] w-full" aria-hidden="true"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={analytics.voteDistribution} dataKey="voteCount" nameKey="optionText" cx="50%" cy="46%" outerRadius={105} innerRadius={voteChartType === "donut" ? 62 : 0} paddingAngle={voteChartType === "donut" ? 2 : 1} stroke="var(--card)" strokeWidth={2}>{analytics.voteDistribution.map((option, index) => <Cell key={option.optionId} fill={chartColors[index % chartColors.length]} />)}</Pie><Tooltip contentStyle={tooltipStyle} formatter={(value, _name, item) => [`${Number(value).toLocaleString()} votes (${item.payload.percentage}%)`, item.payload.optionText]} /><Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "12px" }} /></PieChart></ResponsiveContainer>{voteChartType === "donut" && <div className="pointer-events-none absolute inset-0 flex items-center justify-center pb-7"><div className="text-center"><p className="text-xl font-semibold tabular-nums">{analytics.overview.totalVotes.toLocaleString()}</p><p className="text-[11px] text-muted-foreground">Total votes</p></div></div>}</div>}
+          <p className="sr-only">{analytics.voteDistribution.map((item) => `${item.optionText}: ${item.voteCount} votes, ${item.percentage}%`).join(". ")}.</p>
+        </>}
     </SectionCard>
 
     <SectionCard icon={Activity} title="Vote timeline" description={`Votes per ${analytics.timeline.granularity}, with missing intervals shown as zero.`}>

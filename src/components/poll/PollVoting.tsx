@@ -24,7 +24,7 @@ export default function PollVoting({ options, selectedOption, onSelect }: Props)
                         className={`
           flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 transition-colors
           ${isSelected
-                                ? "border-primary bg-primary/5"
+                                ? "border bg-accent"
                                 : "bg-background hover:bg-muted/60"}
         `}
                     >
@@ -33,10 +33,10 @@ export default function PollVoting({ options, selectedOption, onSelect }: Props)
                             checked={isSelected}
                             onChange={() => onSelect(opt.id)}
                             name="poll-option"
-                            className="h-4 w-4 cursor-pointer accent-primary"
+                            className="h-4 w-4 cursor-pointer accent-black"
                         />
 
-                        <span className="text-sm text-foreground">
+                        <span className="text-sm font-medium text-foreground">
                             {opt.optionText}
                         </span>
                     </label>

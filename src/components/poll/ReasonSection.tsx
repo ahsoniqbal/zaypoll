@@ -102,7 +102,7 @@ export default function ReasonSection({
     [
       "max-w-full whitespace-nowrap rounded-md border px-2.5 py-1.5",
       "inline-flex items-center",
-      "text-md font-medium",
+      "text-sm font-medium",
       "cursor-pointer transition-colors",
       isSelected
         ? "border-black bg-black/90 text-white"
@@ -235,7 +235,7 @@ export default function ReasonSection({
                             variant="outline"
                             title={selectedOption?.optionText ?? "Unknown option"}
                             aria-label={`Selected option: ${selectedOption?.optionText ?? "Unknown option"}`}
-                            className="max-w-40 border-black/60 bg-black/60 text-white sm:max-w-48"
+                            className="max-w-40 bg-black/60 text-white sm:max-w-48"
                           >
                             <span className="truncate">
                               {selectedOption?.optionText ?? "Unknown option"}

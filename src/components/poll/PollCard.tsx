@@ -37,7 +37,10 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
     const isExpired = serverExpired || hasReachedExpiry;
     const showReasonComposer =
         !isExpired &&
-        (!isUserLoggedIn || (hasVoted && userVoteOptionId != null && !hasReason));
+        isUserLoggedIn &&
+        hasVoted &&
+        userVoteOptionId != null &&
+        !hasReason;
 
     const onClickVoteButton = async () => {
         if (!selectedOption || isPending || hasVoted || isExpired) return;
@@ -126,18 +129,45 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                 onSelect={setSelectedOption}
                 isExpired={isExpired}
             />
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-medium">
-                <span
-                    className="tabular-nums"
-                    title={`${totalVotes.toLocaleString()} ${totalVotes === 1 ? "vote" : "votes"}`}
-                >
-                    {formatCompactNumber(totalVotes)} {totalVotes === 1 ? "vote" : "votes"}
-                </span>
-                {poll.expiresAt && (
-                    <>
-                        <span aria-hidden="true">•</span>
-                        <PollExpiryStatus expiresAt={poll.expiresAt} isExpired={isExpired} />
-                    </>
+            <div className="mt-2 mb-3 flex flex-wrap items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-muted-foreground">
+                    <span
+                        className="tabular-nums"
+                        title={`${totalVotes.toLocaleString()} ${totalVotes === 1 ? "vote" : "votes"
+                            }`}
+                    >
+                        {formatCompactNumber(totalVotes)}{" "}
+                        {totalVotes === 1 ? "vote" : "votes"}
+                    </span>
+
+                    {poll.expiresAt && (
+                        <>
+                            <span
+                                aria-hidden="true"
+                                className="text-muted-foreground/60"
+                            >
+                                •
+                            </span>
+
+                            <PollExpiryStatus
+                                expiresAt={poll.expiresAt}
+                                isExpired={isExpired}
+                            />
+                        </>
+                    )}
+                </div>
+
+                {!hasVoted && (
+                    <AppButton
+                        size="sm"
+                        className="ml-auto h-8 shrink-0 rounded-xl px-4"
+                        onClick={onClickVoteButton}
+                        disabled={!selectedOption || isPending || isExpired}
+                        isLoading={isPending}
+                        loadingText="Voting..."
+                    >
+                        {isExpired ? "Poll ended" : "Vote"}
+                    </AppButton>
                 )}
             </div>
 
@@ -162,18 +192,7 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
                     />
                 </div>
 
-                {!hasVoted && (
-                    <AppButton
-                        size="sm"
-                        className="h-8 shrink-0 px-4"
-                        onClick={onClickVoteButton}
-                        disabled={!selectedOption || isPending || isExpired}
-                        isLoading={isPending}
-                        loadingText="Voting..."
-                    >
-                        {isExpired ? "Poll ended" : "Vote"}
-                    </AppButton>
-                )}
+
             </div>
             {showReasonComposer && (
                 <div

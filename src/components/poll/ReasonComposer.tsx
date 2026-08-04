@@ -3,7 +3,6 @@
 import { type ChangeEvent, useRef, useState } from "react";
 import { addReasonAction } from "@/actions/poll.actions";
 import toast from "react-hot-toast";
-import { useAuthModal } from "@/hooks/useAuthModal";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 
@@ -30,22 +29,8 @@ export default function ReasonComposer({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { open } = useAuthModal();
 
-  if (!isUserLoggedIn) {
-    return (
-      <Button
-        type="button"
-        onClick={open}
-        variant="outline"
-        className="w-full rounded-xl text-center font-medium text-muted-foreground hover:cursor-pointer"
-      >
-        Add a reason (optional)
-      </Button>
-    );
-  }
-
-  if (!hasVoted || !optionId || hasReason) return null;
+  if (!isUserLoggedIn || !hasVoted || !optionId || hasReason) return null;
 
   const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setReason(event.target.value);

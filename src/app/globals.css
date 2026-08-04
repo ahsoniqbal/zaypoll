@@ -118,10 +118,11 @@
 
   /* Mixed chart palette instead of all-orange */
   --chart-1: #e16540;
-  --chart-2: #3b82f6;
-  --chart-3: #10b981;
-  --chart-4: #8b5cf6;
-  --chart-5: #64748b;
+  --chart-2: #4f7cac;
+  --chart-3: #3f9b78;
+  --chart-4: #8b6bb1;
+  --chart-5: #d49a3a;
+  --chart-5: #cf668c;
 
   --radius: 0.75rem;
 
@@ -220,5 +221,42 @@
 
   .surface-card {
     @apply rounded-2xl bg-card ring-1 ring-foreground/8 shadow-[0_1px_2px_rgba(20,20,20,0.04),0_8px_24px_rgba(20,20,20,0.035)];
+  }
+
+  .poll-analytics [data-slot="card"] {
+    @apply transition-shadow duration-200 hover:shadow-sm;
+  }
+
+  .poll-analytics [data-slot="card-header"] {
+    @apply border-border/70;
+  }
+
+  .poll-analytics [aria-hidden="true"]:has(> .recharts-responsive-container) {
+    @apply rounded-xl bg-muted/25 p-2;
+  }
+
+  .poll-analytics .recharts-cartesian-grid line {
+    opacity: 0.6;
+    stroke-dasharray: 4 6;
+  }
+
+  .poll-analytics .recharts-cartesian-axis-tick-value {
+    fill: var(--muted-foreground);
+    font-size: 0.6875rem;
+  }
+
+  .poll-analytics .recharts-legend-wrapper {
+    color: var(--muted-foreground);
+  }
+
+  .poll-analytics .recharts-bar-rectangle path,
+  .poll-analytics .recharts-pie-sector path {
+    transition: opacity 160ms ease, filter 160ms ease;
+  }
+
+  .poll-analytics .recharts-bar-rectangle:hover path,
+  .poll-analytics .recharts-pie-sector:hover path {
+    filter: saturate(1.08);
+    opacity: 0.84;
   }
 }

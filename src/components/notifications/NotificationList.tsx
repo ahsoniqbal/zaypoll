@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { getNotificationHref, getNotificationMessage } from "@/lib/common.helper";
 import { cn } from "@/lib/utils";
 import { Notification } from "@/types/notification.types";
+import posthog from "posthog-js";
 
 export default function NotificationList({
   initialNotifications,
@@ -35,6 +36,11 @@ export default function NotificationList({
     }
 
     const href = getNotificationHref(notification);
+    posthog.capture("notification_opened", {
+      notification_type: notification.type,
+      has_destination: Boolean(href),
+      was_unread: !notification.is_read,
+    });
     if (href) router.push(href);
   };
 
@@ -42,7 +48,12 @@ export default function NotificationList({
     setNotifications((current) =>
       current.map((notification) => ({ ...notification, is_read: 1 }))
     );
-    startTransition(() => void readAllNotifications());
+    startTransition(async () => {
+      await readAllNotifications();
+      posthog.capture("notifications_marked_read", {
+        notification_count: notifications.length,
+      });
+    });
   };
 
   if (notifications.length === 0) {

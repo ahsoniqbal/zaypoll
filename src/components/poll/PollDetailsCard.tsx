@@ -15,6 +15,7 @@ import PollDetailTabs from "./PollDetailTabs";
 import { usePollExpiry } from "@/hooks/usePollExpiry";
 import PollExpiryStatus from "./PollExpiryStatus";
 import { formatCompactNumber } from "@/lib/utils";
+import posthog from "posthog-js";
 
 type Props = {
     poll: PollListingDto;
@@ -56,6 +57,11 @@ export default function PollDetailsCard({ poll, isUserLoggedIn, isDetailView, in
         const result = await handleVote(selectedOption, true);
 
         if (result.success) {
+            posthog.capture("poll_voted", {
+                poll_id: poll.pollId,
+                option_id: selectedOption,
+                surface: "detail",
+            });
             setHasVoted(true);
             setUserVoteOptionId(selectedOption);
             setOptions((previous) =>

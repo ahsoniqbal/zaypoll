@@ -14,6 +14,7 @@ import { useAuthModal } from "@/hooks/useAuthModal";
 import { usePollExpiry } from "@/hooks/usePollExpiry";
 import PollExpiryStatus from "./PollExpiryStatus";
 import { formatCompactNumber } from "@/lib/utils";
+import posthog from "posthog-js";
 
 type Props = {
     poll: PollListingDto;
@@ -73,6 +74,14 @@ export default function PollCard({ poll, isUserLoggedIn }: Props) {
         setSelectedOption(null);
         try {
             const result = await handleVote(selectedOption);
+
+            if (result.success) {
+                posthog.capture("poll_voted", {
+                    poll_id: poll.pollId,
+                    option_id: selectedOption,
+                    surface: "feed",
+                });
+            }
 
             // ROLLBACK if failed
             if (!result.success) {

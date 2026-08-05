@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { LogOut, User } from "lucide-react";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { getInitials } from "@/lib/utils";
+import posthog from "posthog-js";
 
 type NavbarProps = {
   isLoggedIn?: boolean;
@@ -36,6 +37,16 @@ export default function Navbar({
   user = null,
 }: NavbarProps) {
   const { open } = useAuthModal();
+
+  useEffect(() => {
+    if (!isLoggedIn || !user) return;
+
+    posthog.identify(String(user.id), {
+      email: user.email ?? undefined,
+      name: user.name ?? undefined,
+      user_name: user.userName,
+    });
+  }, [isLoggedIn, user]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/85 backdrop-blur-xl">

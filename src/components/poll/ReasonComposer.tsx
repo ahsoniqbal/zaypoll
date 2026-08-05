@@ -5,6 +5,7 @@ import { addReasonAction } from "@/actions/poll.actions";
 import toast from "react-hot-toast";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
+import posthog from "posthog-js";
 
 type Props = {
   pollId: number;
@@ -57,6 +58,10 @@ export default function ReasonComposer({
         return;
       }
 
+      posthog.capture("poll_reason_added", {
+        poll_id: pollId,
+        option_id: addedOptionId,
+      });
       toast.success(result.message);
       setReason("");
       resetHeight();

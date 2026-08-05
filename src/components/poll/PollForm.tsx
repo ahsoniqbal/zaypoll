@@ -9,6 +9,7 @@ import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
 import TopicSelector from "../topic/TopicSelector";
 import { AppButton } from "../AppButton";
+import posthog from "posthog-js";
 import {
   POLL_DESCRIPTION_MAX_LENGTH,
   POLL_DURATION_OPTIONS,
@@ -84,6 +85,13 @@ export default function PollForm({ topics }: { topics: TopicDto[] }) {
       const res = await createPollAction(formData);
 
       if (res.success && res.data) {
+        posthog.capture("poll_created", {
+          poll_id: res.data.pollId,
+          option_count: normalizedOptions.length,
+          topic_count: selectedTopics.length,
+          duration: formData.get("duration")?.toString() ?? "never",
+          has_description: Boolean(description.trim()),
+        });
         toast.success("Poll created!");
         setTimeout(() => {
           router.push(`/polls/${res.data?.pollId}`);

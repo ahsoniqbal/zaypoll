@@ -5,6 +5,7 @@ import { useAuthModal } from "@/hooks/useAuthModal";
 import { ArrowBigDown, ArrowBigUp } from "lucide-react";
 import { useState, useTransition } from "react";
 import { formatCompactNumber } from "@/lib/utils";
+import posthog from "posthog-js";
 
 type Props = {
     commentId: number;
@@ -71,7 +72,13 @@ export default function CommentReactions({
 
         startTransition(async () => {
             try {
-                await toggleCommentReactionAction(commentId, vote);
+                const result = await toggleCommentReactionAction(commentId, vote);
+                if (result.success) {
+                    posthog.capture("reason_reaction_changed", {
+                        reason_id: commentId,
+                        reaction: vote === 1 ? "upvote" : "downvote",
+                    });
+                }
             } finally {
                 setIsLocked(false);
             }

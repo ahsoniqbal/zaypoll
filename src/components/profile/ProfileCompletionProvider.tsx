@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { AgeGroup, Gender, ProfileCompletion } from "@/types/user.types";
+import posthog from "posthog-js";
 
 type DialogMode = "onboarding" | "edit";
 type ProfileDialogContextValue = {
@@ -68,6 +69,7 @@ export default function ProfileCompletionProvider({
         toast.error(result.message);
         return;
       }
+      posthog.capture("profile_onboarding_dismissed");
       // No refresh is needed: the incomplete-profile card remains visible and
       // local state already closes the one-time automatic prompt.
       setIsOpen(false);
@@ -90,6 +92,9 @@ export default function ProfileCompletionProvider({
         toast.error(result.message);
         return;
       }
+      posthog.capture("profile_updated", {
+        completion_flow: mode,
+      });
       toast.success(result.message);
       setIsOpen(false);
       // Saving can change the public name and profile-completion card, both of

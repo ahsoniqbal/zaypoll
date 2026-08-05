@@ -5,6 +5,7 @@ import { useAuthModal } from "@/hooks/useAuthModal";
 import { useState, useTransition } from "react";
 import { ArrowBigUp, ArrowBigDown } from "lucide-react";
 import { formatCompactNumber } from "@/lib/utils";
+import posthog from "posthog-js";
 
 
 type Props = {
@@ -74,7 +75,13 @@ export default function PollReactions({
 
         startTransition(async () => {
             try {
-                await toggleReactionAction(pollId, vote);
+                const result = await toggleReactionAction(pollId, vote);
+                if (result.success) {
+                    posthog.capture("poll_reaction_changed", {
+                        poll_id: pollId,
+                        reaction: vote === 1 ? "upvote" : "downvote",
+                    });
+                }
             } finally {
                 setIsLocked(false);
             }

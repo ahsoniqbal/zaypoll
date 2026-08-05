@@ -5,6 +5,7 @@ import { toggleFollowAction } from "@/actions/user.actions";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import posthog from "posthog-js";
 
 type Props = {
     userId: number;
@@ -35,6 +36,10 @@ export default function FollowButton({
             const res = await toggleFollowAction(userId);
 
             if (res.success && typeof res.isFollowing === "boolean") {
+                posthog.capture("user_follow_changed", {
+                    followed_user_id: userId,
+                    is_following: res.isFollowing,
+                });
                 setIsFollowing(res.isFollowing); //sync with server truth
                 onFollowChange?.(res.isFollowing);
             } else {
